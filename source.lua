@@ -1,4 +1,4 @@
-local function serializeTable(_table: {any}, depth: number): string
+function serializeTable(_table: {any}, depth: number): string
 	local output: {string} = {}
 	depth = depth or 0
 
