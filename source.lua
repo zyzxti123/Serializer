@@ -21,15 +21,15 @@ local function serializeTable(_table: {any}, depth: number): string
 			local function formatArguments()
 				local arguments = {}
 				
-				--if debug and debug.getinfo then
-				--	for i = 1, debug.getinfo(value)["numparams"] do
-				--		table.insert(arguments, "arg" .. i)
-				--	end
+				if debug and debug.getinfo then
+					for i = 1, debug.getinfo(value)["numparams"] do
+						table.insert(arguments, "arg" .. i)
+					end
 
-				--	if debug.getinfo(value)["is_vararg"] > 0 then
-				--		table.insert(arguments, "...")
-				--	end
-				--end
+					if debug.getinfo(value)["is_vararg"] > 0 then
+						table.insert(arguments, "...")
+					end
+				end
 
 				return table.concat(arguments, ", ")
 			end
