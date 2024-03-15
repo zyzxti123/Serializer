@@ -114,13 +114,13 @@ function m:serializeTable(input: any, depth: number): string
 
 				if #constants > 0 then
 					table.insert(self.output, "")
-					table.insert(self.output, self:AddTabSpaces("-- Constants --", depth + 1))
+					table.insert(self.output, self:AddTabSpaces("-- Constants --", self.depth + 1))
 					table.insert(self.output, self:FormatConstants(constants))
 				end
 
 				if #upvalues > 0 then
 					table.insert(self.output, "")
-					table.insert(self.output, self:AddTabSpaces("-- Upvalues --", depth + 1))
+					table.insert(self.output, self:AddTabSpaces("-- Upvalues --", self.depth + 1))
 					table.insert(self.output, self:FormatConstants(upvalues))
 				end
 
@@ -135,7 +135,7 @@ function m:serializeTable(input: any, depth: number): string
 				--key = ((typeof(key) == "string" and string.format("['%s']", key)) and (typeof(key) == "number" and string.format("[%s]", key))) or key
 				key = ((typeof(key) == "string" and string.format("['%s']", key) or (typeof(key) == "number" and string.format("[%s]", key)))) or key
 				value = typeof(value) == "string" and string.format("'%s'", value) or value
-				table.insert(self.output, self:AddTabSpaces(string.format("%s = %s, --%s, %s", key, tostring(value), typeof(key), typeof(value)), depth))
+				table.insert(self.output, self:AddTabSpaces(string.format("%s = %s, --%s, %s", key, tostring(value), typeof(key), typeof(value)), self.depth))
 			end
 		end 
 	elseif typeof(input) == "function" then
@@ -148,13 +148,13 @@ function m:serializeTable(input: any, depth: number): string
 
 		if #constants > 0 then
 			table.insert(self.output, "")
-			table.insert(self.output, self:AddTabSpaces("-- Constants --", depth + 1))
+			table.insert(self.output, self:AddTabSpaces("-- Constants --", self.depth + 1))
 			table.insert(self.output, self:FormatConstants(constants))
 		end
 
 		if #upvalues > 0 then
 			table.insert(self.output, "")
-			table.insert(self.output, self:AddTabSpaces("-- Upvalues --", depth + 1))
+			table.insert(self.output, self:AddTabSpaces("-- Upvalues --", self.depth + 1))
 			table.insert(self.output, self:FormatConstants(upvalues))
 		end
 
