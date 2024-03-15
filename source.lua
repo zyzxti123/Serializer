@@ -88,11 +88,11 @@ function m:FormatProtos(protos: {any}): string
 	return _protos
 end
 
-function m:serializeTable(input: any, depth: number): string
+function m:serializeTable(input: any, _depth: number): string
 	local self = setmetatable({}, m)
 
 	self.output = {}
-	self.depth = depth or 0
+	self.depth = _depth or 0
 
 	if typeof(input) == "table" then
 		for key, value in pairs(input) do
@@ -122,7 +122,7 @@ function m:serializeTable(input: any, depth: number): string
 					table.insert(self.output, self:FormatConstants(upvalues))
 				end
 
-				if (debug and debug.getinfo) and self:HasReturn() then 
+				if (debug and debug.getinfo) and self:HasReturn(value) then 
 					table.insert(self.output, self:AddTabSpaces("return", self.depth + 1))
 				else
 					table.insert(self.output, "\n")
@@ -156,7 +156,7 @@ function m:serializeTable(input: any, depth: number): string
 			table.insert(self.output, self:FormatConstants(upvalues))
 		end
 
-		if (debug and debug.getinfo) and self:HasReturn() then 
+		if (debug and debug.getinfo) and self:HasReturn(input) then 
 			table.insert(self.output, self:AddTabSpaces("return", self.depth + 1)) 
 		else
 			table.insert(self.output, "\n")
@@ -174,4 +174,4 @@ function serializeTable(...)
 	return m:serializeTable(table.unpack({...}))
 end
 
-warn(serializeTable({["test"] = function() end, ["test1"] = Vector3.new(0, 0, 0), ["test2"] = "test"}))
+return serializeTable
