@@ -40,7 +40,7 @@ function m:GetConstants(_function): {any}
 end
 
 function m:FormatConstants(constants: {any}): string
-	local _constants: string = ""
+	local _constants: {string} = {}
 
 	for key, value in pairs(constants) do
 		table.insert(_constants, self:AddTabSpaces(string.format("%s = %s --%s, %s", tostring(key), tostring(value), tostring(typeof(key)), tostring(typeof(value))), self.depth + 1))
@@ -60,8 +60,7 @@ function m:GetUpvalues(_function)
 end
 
 function m:FormatUpvalues(upvalues: {any}): string
-	local _upvalues: string = {}
-	local _debugInfo = {}
+	local _upvalues: {string} = {}
 
 	for key, value in pairs(_upvalues) do
 		table.insert(_upvalues, self:AddTabSpaces(string.format("%s = %s --%s, %s", tostring(key), tostring(value), tostring(typeof(key)), tostring(typeof(value))), self.depth + 1))
@@ -81,7 +80,7 @@ function m:GetProtos(_function): {any}
 end
 
 function m:FormatProtos(protos: {any}): string
-	local _protos = protos or self:GetProtos()
+	local _protos: {string} = {}
 
 	--TODO
 
