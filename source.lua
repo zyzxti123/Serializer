@@ -156,9 +156,10 @@ function m:serializeTable(input: any, _depth: number): string
 		end
 
 		if (debug and debug.getinfo) and self:HasReturn(input) then 
+			table.insert(self.output, "")
 			table.insert(self.output, self:AddTabSpaces("return", self.depth + 1)) 
 		else
-			table.insert(self.output, "\n")
+			table.insert(self.output, "")
 		end
 
 		table.insert(self.output, self:AddTabSpaces("end", self.depth))
