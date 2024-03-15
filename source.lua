@@ -106,7 +106,7 @@ function m:serializeTable(input: any, _depth: number): string
 				key = ((typeof(key) == "string" and string.format("['%s']", key) or (typeof(key) == "number" and string.format("[%s]", key)))) or key
 				local constants: {any} = (debug and debug.getconstants) and self:GetConstants(value) or {}
 				local upvalues: {any} = (debug and debug.getupvalues) and self:GetUpvalues(value) or {}
-				local protos: {any} = (debug and debug.getprotos) and self:GetProtos() or {}
+				local protos: {any} = (debug and debug.getprotos) and self:GetProtos(value) or {}
 				local arguments: {any} = (debug and debug.getinfo) and self:GetArguments(value) or {}
 
 				table.insert(self.output, self:AddTabSpaces(string.format("%s = function(%s) --%s, %s", key, self:FormatArguments(arguments) or "", typeof(key), typeof(value)), self.depth))
@@ -120,13 +120,13 @@ function m:serializeTable(input: any, _depth: number): string
 				if #upvalues > 0 then
 					table.insert(self.output, "")
 					table.insert(self.output, self:AddTabSpaces("-- Upvalues --", self.depth + 1))
-					table.insert(self.output, self:FormatConstants(upvalues))
+					table.insert(self.output, self:FormatUpvalues(upvalues))
 				end
 				
 				if #protos > 0 then
 					table.insert(self.output, "")
 					table.insert(self.output, self:AddTabSpaces("-- Protos --", self.depth + 1))
-					table.insert(self.output, self:FormatConstants(protos))
+					table.insert(self.output, self:FormatProtos(protos))
 				end
 
 				if (debug and debug.getinfo) and self:HasReturn(value) then 
@@ -160,13 +160,13 @@ function m:serializeTable(input: any, _depth: number): string
 		if #upvalues > 0 then
 			table.insert(self.output, "")
 			table.insert(self.output, self:AddTabSpaces("-- Upvalues --", self.depth + 1))
-			table.insert(self.output, self:FormatConstants(upvalues))
+			table.insert(self.output, self:FormatUpvalues(upvalues))
 		end
 		
 		if #protos > 0 then
 			table.insert(self.output, "")
 			table.insert(self.output, self:AddTabSpaces("-- Protos --", self.depth + 1))
-			table.insert(self.output, self:FormatConstants(protos))
+			table.insert(self.output, self:FormatProtos(protos))
 		end
 		
 		if (debug and debug.getinfo) and self:HasReturn(input) then 
