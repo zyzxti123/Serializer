@@ -13,7 +13,7 @@ end
 
 function m:GetArguments(_function): {string}
 	local arguments: {string} = {}
-	
+
 	for key = 1, debug.getinfo(_function)["numparams"] do
 		table.insert(arguments, "arg" .. key)
 	end
@@ -21,7 +21,7 @@ function m:GetArguments(_function): {string}
 	if debug.getinfo(_function)["is_vararg"] > 0 then
 		table.insert(arguments, "...")
 	end
-	
+
 	return arguments
 end
 
@@ -35,17 +35,17 @@ function m:GetConstants(_function): {any}
 	for key, value in pairs(debug.getconstants(_function)) do
 		constants[key] = value
 	end
-	
+
 	return constants
 end
 
 function m:FormatConstants(constants: {any}): string
 	local _constants: string = ""
-	
+
 	for key, value in pairs(constants) do
 		table.insert(_constants, self:AddTabSpaces(string.format("%s = %s --%s, %s", tostring(key), tostring(value), tostring(typeof(key)), tostring(typeof(value))), self.depth + 1))
 	end
-	
+
 	return table.concat(_constants, "\n")
 end
 
@@ -62,11 +62,11 @@ end
 function m:FormatUpvalues(upvalues: {any}): string
 	local _upvalues: string = {}
 	local _debugInfo = {}
-	
+
 	for key, value in pairs(_upvalues) do
 		table.insert(_upvalues, self:AddTabSpaces(string.format("%s = %s --%s, %s", tostring(key), tostring(value), tostring(typeof(key)), tostring(typeof(value))), self.depth + 1))
 	end
-	
+
 	return table.concat(_upvalues, "\n")
 end
 
@@ -82,18 +82,20 @@ end
 
 function m:FormatProtos(protos: {any}): string
 	local _protos = protos or self:GetProtos()
-	
+
 	--TODO
-	
+
 	return _protos
 end
 
-function m.serializeTable(input: any, depth: number): string
+function m:serializeTable(input: any, depth: number): string
+	warn(input)	
+
 	local self = setmetatable({}, m)
-	
+
 	self.output = {}
 	self.depth = depth or 0
-	
+
 	if typeof(input) == "table" then
 		for key, value in pairs(input) do
 			if typeof(value) == "table" then
@@ -141,33 +143,37 @@ function m.serializeTable(input: any, depth: number): string
 		local upvalues: {any} = (debug and debug.getupvalues) and self:GetUpvalues(input) or {}
 		--local protos: {any} = (debug and debug.getprotos) and self:GetProtos(input) or {}
 		local arguments: {any} = (debug and debug.getinfo) and self:GetArguments(input) or {}
-		
+
 		table.insert(self.output, self:AddTabSpaces(string.format("return function(%s) --%s", self:FormatArguments(arguments) or "", typeof(input)), self.depth))
-		
+
 		if #constants > 0 then
 			table.insert(self.output, "")
 			table.insert(self.output, self:AddTabSpaces("-- Constants --", depth + 1))
 			table.insert(self.output, self:FormatConstants(constants))
 		end
-		
+
 		if #upvalues > 0 then
 			table.insert(self.output, "")
 			table.insert(self.output, self:AddTabSpaces("-- Upvalues --", depth + 1))
 			table.insert(self.output, self:FormatConstants(upvalues))
 		end
-		
+
 		if (debug and debug.getinfo) and self:HasReturn() then 
 			table.insert(self.output, self:AddTabSpaces("return", self.depth + 1)) 
 		else
 			table.insert(self.output, "\n")
 		end
-		
+
 		table.insert(self.output, self:AddTabSpaces("end", self.depth))
 	else
 		table.insert(self.output, string.format("%s --%s", tostring(input), tostring(typeof(input))))
 	end
-	
+
 	return table.concat(self.output, "\n")
 end
 
-return m.serializeTable()
+function serializeTable(...)
+	return m:serializeTable(...)
+end
+
+return serializeTable
