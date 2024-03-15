@@ -62,7 +62,7 @@ end
 function m:FormatUpvalues(upvalues: {string}): string
 	local _upvalues: {string} = {}
 
-	for key, value in pairs(_upvalues) do
+	for key, value in pairs(upvalues) do
 		table.insert(_upvalues, self:AddTabSpaces(string.format("%s = %s --%s, %s", tostring(key), tostring(value), tostring(typeof(key)), tostring(typeof(value))), self.depth + 1))
 	end
 
@@ -82,7 +82,7 @@ end
 function m:FormatProtos(protos: {string}): string
 	local _protos: {string} = {}
 
-	for key, value in pairs(_protos) do
+	for key, value in pairs(protos) do
 		table.insert(_protos, self:AddTabSpaces(string.format("%s = %s --%s, %s", tostring(key), tostring(value), tostring(typeof(key)), tostring(typeof(value))), self.depth + 1))
 	end
 	
@@ -106,7 +106,7 @@ function m:serializeTable(input: any, _depth: number): string
 				key = ((typeof(key) == "string" and string.format("['%s']", key) or (typeof(key) == "number" and string.format("[%s]", key)))) or key
 				local constants: {any} = (debug and debug.getconstants) and self:GetConstants(value) or {}
 				local upvalues: {any} = (debug and debug.getupvalues) and self:GetUpvalues(value) or {}
-				--local protos: {any} = (debug and debug.getprotos) and self:GetProtos(value) or {}
+				local protos: {any} = (debug and debug.getprotos) and self:GetProtos(value) or {}
 				local arguments: {any} = (debug and debug.getinfo) and self:GetArguments(value) or {}
 
 				table.insert(self.output, self:AddTabSpaces(string.format("%s = function(%s) --%s, %s", key, self:FormatArguments(arguments) or "", typeof(key), typeof(value)), self.depth))
@@ -123,11 +123,11 @@ function m:serializeTable(input: any, _depth: number): string
 					table.insert(self.output, self:FormatUpvalues(upvalues))
 				end
 				
-				--if #protos > 0 then
-				--	table.insert(self.output, "")
-				--	table.insert(self.output, self:AddTabSpaces("-- Protos --", self.depth + 1))
-				--	table.insert(self.output, self:FormatProtos(protos))
-				--end
+				if #protos > 0 then
+					table.insert(self.output, "")
+					table.insert(self.output, self:AddTabSpaces("-- Protos --", self.depth + 1))
+					table.insert(self.output, self:FormatProtos(protos))
+				end
 
 				if (debug and debug.getinfo) and self:HasReturn(value) then 
 					table.insert(self.output, self:AddTabSpaces("return", self.depth + 1))
@@ -145,7 +145,7 @@ function m:serializeTable(input: any, _depth: number): string
 	elseif typeof(input) == "function" then
 		local constants: {any} = (debug and debug.getconstants) and self:GetConstants(input) or {}
 		local upvalues: {any} = (debug and debug.getupvalues) and self:GetUpvalues(input) or {}
-		--local protos: {any} = (debug and debug.getprotos) and self:GetProtos(input) or {}
+		local protos: {any} = (debug and debug.getprotos) and self:GetProtos(input) or {}
 		local arguments: {any} = (debug and debug.getinfo) and self:GetArguments(input) or {}
 
 		table.insert(self.output, self:AddTabSpaces(string.format("return function(%s) --%s", self:FormatArguments(arguments) or "", typeof(input)), self.depth))
@@ -162,17 +162,17 @@ function m:serializeTable(input: any, _depth: number): string
 			table.insert(self.output, self:FormatUpvalues(upvalues))
 		end
 		
-		--if #protos > 0 then
-		--	table.insert(self.output, "")
-		--	table.insert(self.output, self:AddTabSpaces("-- Protos --", self.depth + 1))
-		--	table.insert(self.output, self:FormatProtos(protos))
-		--end
+		if #protos > 0 then
+			table.insert(self.output, "")
+			table.insert(self.output, self:AddTabSpaces("-- Protos --", self.depth + 1))
+			table.insert(self.output, self:FormatProtos(protos))
+		end
 		
 		if (debug and debug.getinfo) and self:HasReturn(input) then 
-			table.insert(self.output, "")
+			table.insert(self.output, "\n")
 			table.insert(self.output, self:AddTabSpaces("return", self.depth + 1)) 
 		else
-			table.insert(self.output, "")
+			table.insert(self.output, "\n")
 		end
 
 		table.insert(self.output, self:AddTabSpaces("end", self.depth))
