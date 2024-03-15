@@ -89,8 +89,6 @@ function m:FormatProtos(protos: {any}): string
 end
 
 function m:serializeTable(input: any, depth: number): string
-	warn(input)	
-
 	local self = setmetatable({}, m)
 
 	self.output = {}
@@ -110,7 +108,7 @@ function m:serializeTable(input: any, depth: number): string
 				--local protos: {any} = (debug and debug.getprotos) and self:GetProtos() or {}
 				local arguments: {any} = (debug and debug.getinfo) and self:GetArguments(value) or {}
 
-				table.insert(self.output, self:AddTabSpaces(string.format("%s = function(%s) --%s", key, self:FormatArguments(arguments) or "", typeof(value)), self.depth))
+				table.insert(self.output, self:AddTabSpaces(string.format("%s = function(%s) --%s, %s", key, self:FormatArguments(arguments) or "", typeof(key), typeof(value)), self.depth))
 
 				if #constants > 0 then
 					table.insert(self.output, "")
@@ -173,7 +171,7 @@ function m:serializeTable(input: any, depth: number): string
 end
 
 function serializeTable(...)
-	return m:serializeTable(...)
+	return m:serializeTable(table.unpack({...}))
 end
 
-return serializeTable
+warn(serializeTable({["test"] = function() end, ["test1"] = Vector3.new(0, 0, 0), ["test2"] = "test"}))
