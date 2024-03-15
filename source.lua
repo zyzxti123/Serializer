@@ -186,3 +186,5 @@ end
 function serializeTable(...)
 	return m:serializeTable(table.unpack({...}))
 end
+
+return serializeTable
