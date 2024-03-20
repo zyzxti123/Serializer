@@ -5,7 +5,7 @@ local m = {}
 m.__index = m
 
 function m:AddTabSpaces(_string: string, depth: number): string
-	depth = depth or 0
+	depth = depth or 1
 
 	if depth > 0 then
 		return string.rep("\t", depth) .. _string
@@ -41,8 +41,8 @@ end
 function m:serializeTable(input: any, depth: number): string
 	local self = setmetatable({}, m)
 
-	self.output = {}
-	self.depth = depth or 0
+	self.output = {"return  ▼  {"}
+	self.depth = depth or 1
 
 	if typeof(input) == "table" then
 		for key, value in pairs(input) do
@@ -67,9 +67,8 @@ function m:serializeTable(input: any, depth: number): string
 				end
 				
 				table.insert(self.output, self:AddTabSpaces(string.format("%s = function(%s) --%s, %s", key, (self:FormatArguments(arguments) or ""), keyType, valueType), self.depth))
-
 				--if ((debug and debug.getinfo) and self:HasReturn(input)) then table.insert(self.output, "") end
-					
+				table.insert(self.output, "")
 				table.insert(self.output, self:AddTabSpaces("end", self.depth))
 			else
 				local keyType, valueType = typeof(key), typeof(input)
@@ -97,14 +96,17 @@ function m:serializeTable(input: any, depth: number): string
 		table.insert(self.output, self:AddTabSpaces(string.format("function %s(%s) --%s", key, (self:FormatArguments(arguments) or ""), inputType), self.depth))
 
 		--if ((debug and debug.getinfo) and self:HasReturn(input)) then table.insert(self.output, "") end
-
+		
+		table.insert(self.output, "")
 		table.insert(self.output, self:AddTabSpaces("end", self.depth))
 		table.insert(self.output, self:AddTabSpaces(string.format("return %s", key), self.depth)) 
 	else
 		table.insert(self.output, string.format("%s --%s", tostring(input), tostring(typeof(input))))
 	end
 	
-	return table.concat(self.output, "\n") --"  ▼  {\n" .. table.concat(self.output, "\n") .. "\n}"
+	table.insert(self.output, "}")
+
+	return table.concat(self.output, ",\n") --"  ▼  {\n" .. table.concat(self.output, "\n") .. "\n}"
 end
 
 function serializeTable(...)
