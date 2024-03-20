@@ -48,7 +48,6 @@ function m:serializeTable(input: any, depth: number): string
 		for key, value in pairs(input) do
 			if typeof(value) == "table" then
 				local keyType, valueType = typeof(key), typeof(value)
-				
 				if typeof(key) == "string" or typeof(key) == "number" then 
 					key = string.format("[%s]", string.format("%q", key))
 				else
@@ -59,6 +58,7 @@ function m:serializeTable(input: any, depth: number): string
 				table.insert(self.output, self:serializeTable(value, self.depth + 1))
 				table.insert(self.output, self:AddTabSpaces("},", self.depth))
 			elseif typeof(value) == "function" then
+				local arguments: {any} = (debug and debug.getinfo) and self:GetArguments(input) or {}
 				local keyType, valueType = typeof(key), typeof(value)
 				if typeof(key) == "string" or typeof(key) == "number" then 
 					key = string.format("[%s]", string.format("%q", key))
@@ -66,7 +66,11 @@ function m:serializeTable(input: any, depth: number): string
 					key = string.format("[%s]", tostring(key))
 				end
 				
-				table.insert(self.output, self:AddTabSpaces(string.format("%s = %s, --%s, %s", key, self:serializeTable(value), keyType, valueType), self.depth))
+				table.insert(self.output, self:AddTabSpaces(string.format("%s = function %s(%s) --%s, %s", key, (self:FormatArguments(arguments) or ""), keyType, valueType), self.depth))
+
+				--if ((debug and debug.getinfo) and self:HasReturn(input)) then table.insert(self.output, "") end
+					
+				table.insert(self.output, self:AddTabSpaces("end", self.depth))
 			else
 				local keyType, valueType = typeof(key), typeof(input)
 				if typeof(key) == "string" or typeof(key) == "number" then 
@@ -82,10 +86,8 @@ function m:serializeTable(input: any, depth: number): string
 		end
 	elseif typeof(input) == "function" then
 		local arguments: {any} = (debug and debug.getinfo) and self:GetArguments(input) or {}
-		
 		local key = (debug and debug.getinfo) and debug.getinfo(input).name or ""
 		local keyType, inputType = typeof(key), typeof(input)
-		
 		--if typeof(key) == "string" or typeof(key) == "number" then 
 		--	key = string.format("[%s]", string.format("%q", key))
 		--else
@@ -94,12 +96,10 @@ function m:serializeTable(input: any, depth: number): string
 		
 		table.insert(self.output, self:AddTabSpaces(string.format("function %s(%s) --%s", key, (self:FormatArguments(arguments) or ""), inputType), self.depth))
 
-		if ((debug and debug.getinfo) and self:HasReturn(input)) then 
-			table.insert(self.output, "")
-		end
+		--if ((debug and debug.getinfo) and self:HasReturn(input)) then table.insert(self.output, "") end
 
 		table.insert(self.output, self:AddTabSpaces("end", self.depth))
-		--table.insert(self.output, self:AddTabSpaces(string.format("return %s", key), self.depth)) 
+		table.insert(self.output, self:AddTabSpaces(string.format("return %s", key), self.depth)) 
 	else
 		table.insert(self.output, string.format("%s --%s", tostring(input), tostring(typeof(input))))
 	end
