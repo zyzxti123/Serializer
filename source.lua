@@ -58,7 +58,7 @@ function m:serializeTable(input: any, depth: number): string
 				table.insert(self.output, self:serializeTable(value, self.depth + 1))
 				table.insert(self.output, self:AddTabSpaces("},", self.depth))
 			elseif typeof(value) == "function" then
-				local arguments: {any} = (debug and debug.getinfo) and self:GetArguments(input) or {}
+				local arguments: {any} = (debug and debug.getinfo) and self:GetArguments(value) or {}
 				local keyType, valueType = typeof(key), typeof(value)
 				if typeof(key) == "string" or typeof(key) == "number" then 
 					key = string.format("[%s]", string.format("%q", key))
