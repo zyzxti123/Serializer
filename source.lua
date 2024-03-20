@@ -66,7 +66,7 @@ function m:serializeTable(input: any, depth: number): string
 					key = string.format("[%s]", tostring(key))
 				end
 				
-				table.insert(self.output, self:AddTabSpaces(string.format("%s = function %s(%s) --%s, %s", key, (self:FormatArguments(arguments) or ""), keyType, valueType), self.depth))
+				table.insert(self.output, self:AddTabSpaces(string.format("%s = function(%s) --%s, %s", key, (self:FormatArguments(arguments) or ""), keyType, valueType), self.depth))
 
 				--if ((debug and debug.getinfo) and self:HasReturn(input)) then table.insert(self.output, "") end
 					
