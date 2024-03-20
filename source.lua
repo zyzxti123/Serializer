@@ -5,7 +5,7 @@ local m = {}
 m.__index = m
 
 function m:AddTabSpaces(_string: string, depth: number): string
-	depth = depth or 1
+	depth = depth or 0
 
 	if depth > 0 then
 		return string.rep("\t", depth) .. _string
@@ -37,7 +37,7 @@ function m:serializeTable(input: any, depth: number): string
 	local self = setmetatable({}, m)
 
 	self.output = {} -- "return  ▼  {"
-	self.depth = depth or 1
+	self.depth = depth or 0
 
 	local inputType = typeof(input)
 
