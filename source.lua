@@ -106,7 +106,7 @@ function m:serializeTable(input: any, depth: number): string
 	
 	table.insert(self.output, "}")
 
-	return table.concat(self.output, ",\n") --"  ▼  {\n" .. table.concat(self.output, "\n") .. "\n}"
+	return table.concat(self.output, "\n") --"  ▼  {\n" .. table.concat(self.output, "\n") .. "\n}"
 end
 
 function serializeTable(...)
