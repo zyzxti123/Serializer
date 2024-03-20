@@ -53,7 +53,7 @@ function m:serializeTable(input: any, depth: number): string
 				end
 				
 				table.insert(self.output, self:AddTabSpaces(string.format("%s =  ▼  { --%s, %s", key, keyType, valueType), self.depth))
-				table.insert(self.output, self:serializeTable(value), self.depth + 1)
+				table.insert(self.output, self:AddTabSpaces(self:serializeTable(value), self.depth + 1))
 				table.insert(self.output, self:AddTabSpaces("},", self.depth))
 			elseif valueType == "function" then
 				local arguments: {any} = (debug and debug.getinfo) and self:GetArguments(value) or {}
