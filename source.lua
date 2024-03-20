@@ -14,11 +14,6 @@ function m:AddTabSpaces(_string: string, depth: number): string
 	return _string
 end
 
-function m:HasReturn(_function): boolean
-	local info = debug.getinfo(_function, "u")
-	return info and info.nups > 0
-end
-
 function m:GetArguments(_function): {string}
 	local arguments: {string} = {}
 
@@ -44,64 +39,55 @@ function m:serializeTable(input: any, depth: number): string
 	self.output = {"return  ▼  {"}
 	self.depth = depth or 1
 
-	if typeof(input) == "table" then
+	local inputType = typeof(input)
+
+	if inputType == "table" then
 		for key, value in pairs(input) do
-			if typeof(value) == "table" then
-				local keyType, valueType = typeof(key), typeof(value)
-				if typeof(key) == "string" or typeof(key) == "number" then 
+			local keyType, valueType = typeof(key), typeof(value)
+
+			if valueType == "table" then
+				if keyType == "string" or keyType == "number" then 
 					key = string.format("[%s]", string.format("%q", key))
 				else
 					key = string.format("[%s]", tostring(key))
 				end
 				
 				table.insert(self.output, self:AddTabSpaces(string.format("%s =  ▼  { --%s, %s", key, keyType, valueType), self.depth))
-				table.insert(self.output, self:serializeTable(value, self.depth + 1))
+				table.insert(self.output, self:serializeTable(value), self.depth + 1)
 				table.insert(self.output, self:AddTabSpaces("},", self.depth))
-			elseif typeof(value) == "function" then
+			elseif valueType == "function" then
 				local arguments: {any} = (debug and debug.getinfo) and self:GetArguments(value) or {}
-				local keyType, valueType = typeof(key), typeof(value)
-				if typeof(key) == "string" or typeof(key) == "number" then 
+				if keyType == "string" or keyType == "number" then
 					key = string.format("[%s]", string.format("%q", key))
 				else
 					key = string.format("[%s]", tostring(key))
 				end
 				
 				table.insert(self.output, self:AddTabSpaces(string.format("%s = function(%s) --%s, %s", key, (self:FormatArguments(arguments) or ""), keyType, valueType), self.depth))
-				--if ((debug and debug.getinfo) and self:HasReturn(input)) then table.insert(self.output, "") end
 				table.insert(self.output, "")
 				table.insert(self.output, self:AddTabSpaces("end", self.depth))
 			else
-				local keyType, valueType = typeof(key), typeof(input)
-				if typeof(key) == "string" or typeof(key) == "number" then 
+				if keyType == "string" or keyType == "number" then 
 					key = string.format("[%s]", string.format("%q", key))
 				else
 					key = string.format("[%s]", tostring(key))
 				end
 				
-				value = typeof(value) == "string" and string.format("'%s'", value) or value
+				value = valueType == "string" and string.format("'%s'", value) or value
 				
 				table.insert(self.output, self:AddTabSpaces(string.format("%s = %s, --%s, %s", key, tostring(value), keyType, valueType), self.depth))
 			end
 		end
-	elseif typeof(input) == "function" then
+	elseif inputType == "function" then
 		local arguments: {any} = (debug and debug.getinfo) and self:GetArguments(input) or {}
 		local key = (debug and debug.getinfo) and debug.getinfo(input).name or ""
-		local keyType, inputType = typeof(key), typeof(input)
-		--if typeof(key) == "string" or typeof(key) == "number" then 
-		--	key = string.format("[%s]", string.format("%q", key))
-		--else
-		--	key = string.format("[%s]", tostring(key))
-		--end
-		
-		table.insert(self.output, self:AddTabSpaces(string.format("function %s(%s) --%s", key, (self:FormatArguments(arguments) or ""), inputType), self.depth))
 
-		--if ((debug and debug.getinfo) and self:HasReturn(input)) then table.insert(self.output, "") end
-		
+		table.insert(self.output, self:AddTabSpaces(string.format("function %s(%s) --%s", key, (self:FormatArguments(arguments) or ""), inputType), self.depth))
 		table.insert(self.output, "")
 		table.insert(self.output, self:AddTabSpaces("end", self.depth))
-		table.insert(self.output, self:AddTabSpaces(string.format("return %s", key), self.depth)) 
+		table.insert(self.output, self:AddTabSpaces(string.format("return %s", key), self.depth))
 	else
-		table.insert(self.output, string.format("%s --%s", tostring(input), tostring(typeof(input))))
+		table.insert(self.output, string.format("%s --%s", tostring(input), tostring(inputType)))
 	end
 	
 	table.insert(self.output, "}")
