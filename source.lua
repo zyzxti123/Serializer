@@ -36,7 +36,7 @@ end
 function m:serializeTable(input: any, depth: number): string
 	local self = setmetatable({}, m)
 
-	self.output = {"return  ▼  {"}
+	self.output = {} -- "return  ▼  {"
 	self.depth = depth or 1
 
 	local inputType = typeof(input)
@@ -90,7 +90,7 @@ function m:serializeTable(input: any, depth: number): string
 		table.insert(self.output, string.format("%s --%s", tostring(input), tostring(inputType)))
 	end
 	
-	table.insert(self.output, "}")
+	--table.insert(self.output, "}")
 
 	return table.concat(self.output, "\n") --"  ▼  {\n" .. table.concat(self.output, "\n") .. "\n}"
 end
