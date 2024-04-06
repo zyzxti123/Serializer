@@ -9,11 +9,12 @@ end
 
 function Serializer:getArguments(func)
     local args = {}
-
     local funcInfo = debug.getinfo(func, "u")
 
-    for i = 1, funcInfo.nparams do
-        table.insert(args, "arg" .. i)
+    if funcInfo.nparams then
+        for i = 1, funcInfo.nparams do
+            table.insert(args, "arg" .. i)
+        end
     end
 
     if funcInfo.isvararg then
