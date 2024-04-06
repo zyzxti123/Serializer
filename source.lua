@@ -10,15 +10,13 @@ end
 function Serializer:getArguments(func)
     local args = {}
 
-    local succes, result = pcall(function()
-		return debug.getinfo(func, "u")
-	end)
+    local funcInfo = debug.getinfo(func, "u")
 
-    for i = 1, result.nparams do
+    for i = 1, funcInfo.nparams do
         table.insert(args, "arg" .. i)
     end
 
-    if result.isvararg then
+    if funcInfo.isvararg then
         table.insert(args, "...")
     end
 
