@@ -1,103 +1,98 @@
--- ▼ 
--- ▶ 
+local Serializer = {}
+Serializer.__index = Serializer
 
-local m = {}
-m.__index = m
-
-function m:AddTabSpaces(_string: string, depth: number): string
-	depth = depth or 0
-
-	if depth > 0 then
-		return string.rep("\t", depth) .. _string
-	end
-
-	return _string
+function Serializer:addTabSpaces(str, depth)
+    return string.rep("\t", depth or 0) .. str
 end
 
-function m:GetArguments(_function): {string}
-	local arguments: {string} = {}
+function Serializer:getArguments(func)
+    local args = {}
 
-	for key = 1, debug.getinfo(_function)["numparams"] do
-		table.insert(arguments, "arg" .. key)
-	end
+    local succes, result = pcall(function()
+		return debug.getinfo(func, "u")
+	end)
 
-	if debug.getinfo(_function)["is_vararg"] > 0 then
-		table.insert(arguments, "...")
-	end
+    for i = 1, result.nparams do
+        table.insert(args, "arg" .. i)
+    end
 
-	return arguments
+    if result.isvararg then
+        table.insert(args, "...")
+    end
+
+    return args
 end
 
-function m:FormatArguments(arguments): string
-	if arguments == nil or #arguments <= 0 then return end
-	return table.concat(arguments, ", ")
+function Serializer:formatArguments(args)
+    return args and #args > 0 and table.concat(args, ", ") or ""
 end
 
-function m:serializeTable(input: any, depth: number): string
-	local self = setmetatable({}, m)
+function Serializer:serializeFunction(func, depth)
+    local args = self:getArguments(func)
+    local formattedArgs = self:formatArguments(args)
 
-	self.output = {} -- "return  ▼  {"
-	self.depth = depth or 0
+    local output = self:addTabSpaces("function(" .. formattedArgs .. ")", depth)
+	output = output .. "\n" .. self:addTabSpaces("end", depth)
 
-	local inputType = typeof(input)
+    return output
+end
 
-	if inputType == "table" then
-		for key, value in pairs(input) do
-			local keyType, valueType = typeof(key), typeof(value)
+function Serializer:serializeTable(input, depth)
+    local output = {}
+    depth = depth or 0
 
-			if valueType == "table" then
-				if keyType == "string" or keyType == "number" then 
-					key = string.format("[%s]", string.format("%q", key))
-				else
-					key = string.format("[%s]", tostring(key))
-				end
-				
-				table.insert(self.output, self:AddTabSpaces(string.format("%s =  ▼  { --%s, %s", key, keyType, valueType), self.depth))
-				table.insert(self.output, self:serializeTable(value, self.depth + 1))
-				table.insert(self.output, self:AddTabSpaces("},", self.depth))
-			elseif valueType == "function" then
-				local arguments: {any} = (debug and debug.getinfo) and self:GetArguments(value) or {}
-				if keyType == "string" or keyType == "number" then
-					key = string.format("[%s]", string.format("%q", key))
-				else
-					key = string.format("[%s]", tostring(key))
-				end
-				
-				table.insert(self.output, self:AddTabSpaces(string.format("%s = function(%s) --%s, %s", key, (self:FormatArguments(arguments) or ""), keyType, valueType), self.depth))
-				table.insert(self.output, "")
-				table.insert(self.output, self:AddTabSpaces("end", self.depth))
-			else
-				if keyType == "string" or keyType == "number" then 
-					key = string.format("[%s]", string.format("%q", key))
-				else
-					key = string.format("[%s]", tostring(key))
-				end
-				
-				value = valueType == "string" and string.format("'%s'", value) or value
-				
-				table.insert(self.output, self:AddTabSpaces(string.format("%s = %s, --%s, %s", key, tostring(value), keyType, valueType), self.depth))
-			end
-		end
-	elseif inputType == "function" then
-		local arguments: {any} = (debug and debug.getinfo) and self:GetArguments(input) or {}
-		local key = (debug and debug.getinfo) and debug.getinfo(input).name or ""
+    for key, value in pairs(input) do
+        local keyStr = string.format("[%q]", tostring(key))
+        local valueType = type(value)
+        local formattedStr = self:addTabSpaces(keyStr .. " = ", depth)
 
-		table.insert(self.output, self:AddTabSpaces(string.format("function %s(%s) --%s", key, (self:FormatArguments(arguments) or ""), inputType), self.depth))
-		table.insert(self.output, "")
-		table.insert(self.output, self:AddTabSpaces("end", self.depth))
-		table.insert(self.output, self:AddTabSpaces(string.format("return %s", key), self.depth))
-	else
-		table.insert(self.output, string.format("%s --%s", tostring(input), tostring(inputType)))
-	end
+        if valueType == "table" then
+            formattedStr = formattedStr .. "{\n" .. self:serializeTable(value, depth + 1) .. "\n" .. self:addTabSpaces("},", depth)
+        elseif valueType == "function" then
+            formattedStr = formattedStr .. self:serializeFunction(value, depth + 1) .. ","
+        else
+            formattedStr = formattedStr .. string.format("%q", tostring(value)) .. ","
+        end
+
+        table.insert(output, formattedStr)
+    end
+
+    return table.concat(output, "\n")
+end
+
+function Serializer:serializeJSON(input)
+	local success, result = pcall(function() 
+		return game:GetService("HttpService"):JSONDecode(input)
+	end)
+
+	assert(not success, "The first argument in serializeJSON must be a JSON!")
+
+	return self:serializeTable(result)
+end
+
+return function(input)
+	assert(typeof(input) ~= "table", "The first argument in serializeTable must be a Table!")
+	local serializer = setmetatable({}, Serializer)
+	local watermark = "--[[\nTable/JSON serializer developed by - zyzxti#2047\ncan be useful when you want to see a refreshed table or when your executor does not have decompiler\nversion - 1.3\n]]--"
+    return watermark .. "\nreturn {\n" .. serializer:serializeTable(input, 1) .. "\n}"
+end
+
+--// Use this if u want "bypass" console max chars (may be laggy and glitchy but...)
+--[[
+local old; old = hookfunction(print, function(...)
+	local input = {...}
 	
-	--table.insert(self.output, "}")
+	for _, message in pairs(input) do
+		local Length = #message
+		local Parts = {}
 
-	return table.concat(self.output, "\n") --"  ▼  {\n" .. table.concat(self.output, "\n") .. "\n}"
-end
+		for index = 1, Length, 5000 do
+			table.insert(Parts, message:sub(index, math.min(index + 5000 - 1, Length)))
+		end
 
-function serializeTable(...)
-	local varargs = {...}
-	return m:serializeTable(table.unpack(varargs))
-end
-
-return serializeTable
+		for _, part in pairs(Parts) do
+			old(part)
+		end
+	end
+end)
+]]--
