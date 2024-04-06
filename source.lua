@@ -78,7 +78,7 @@ return {
     end,
 
     serializeTable = function(input)
-        assert(typeof(input) ~= "table", "The first argument in serializeTable must be a Table!")
+        assert(typeof(input) == "table", "The first argument in serializeTable must be a Table!")
         return Watermark .. "\nreturn {\n" .. Serializer:serializeTable(input, 1) .. "\n}"
     end
 }
