@@ -8,10 +8,10 @@ local Serializer = loadstring(game:HttpGet("https://raw.githubusercontent.com/zy
 
 ### Serializing JSON
 ```lua
-Serializer:serializeJSON(input: string): string
+Serializer.serializeJSON(input: string): string
 ```
 
 ### Serializing Table
 ```lua
-Serializer:serializeTable(input: table): string
+Serializer.serializeTable(input: table): string
 ```
