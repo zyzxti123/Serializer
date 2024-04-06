@@ -1,6 +1,8 @@
 local Serializer = {}
 Serializer.__index = Serializer
 
+local Watermark = "--[[\nTable/JSON serializer developed by - zyzxti#2047\ncan be useful when you want to see a refreshed table or when your executor does not have decompiler\nversion - 1.3\n]]--" --// dont delete it or u are skid
+
 function Serializer:addTabSpaces(str, depth)
     return string.rep("\t", depth or 0) .. str
 end
@@ -47,11 +49,11 @@ function Serializer:serializeTable(input, depth)
         local formattedStr = self:addTabSpaces(keyStr .. " = ", depth)
 
         if valueType == "table" then
-            formattedStr = formattedStr .. "{\n" .. self:serializeTable(value, depth + 1) .. "\n" .. self:addTabSpaces("},", depth)
+            formattedStr = formattedStr .. "{\n" .. self:serializeTable(value, depth + 1) .. "\n" .. self:addTabSpaces("},", depth)  .. "--" .. tostring(typeof(key)) .. "," .. tostring(typeof(value))
         elseif valueType == "function" then
-            formattedStr = formattedStr .. self:serializeFunction(value, depth + 1) .. ","
+            formattedStr = formattedStr .. self:serializeFunction(value, depth + 1) .. "," .. "--" .. tostring(typeof(key)) .. "," .. tostring(typeof(value))
         else
-            formattedStr = formattedStr .. string.format("%q", tostring(value)) .. ","
+            formattedStr = formattedStr .. string.format("%q", tostring(value)) .. "," .. "--" .. tostring(typeof(key)) .. "," .. tostring(typeof(value))
         end
 
         table.insert(output, formattedStr)
@@ -70,12 +72,16 @@ function Serializer:serializeJSON(input)
 	return self:serializeTable(result)
 end
 
-return function(input)
-	assert(typeof(input) ~= "table", "The first argument in serializeTable must be a Table!")
-	local serializer = setmetatable({}, Serializer)
-	local watermark = "--[[\nTable/JSON serializer developed by - zyzxti#2047\ncan be useful when you want to see a refreshed table or when your executor does not have decompiler\nversion - 1.3\n]]--"
-    return watermark .. "\nreturn {\n" .. serializer:serializeTable(input, 1) .. "\n}"
-end
+return {
+    serializeJSON = function(input)
+        return Watermark .. "\nreturn {\n" .. Serializer:serializeJSON(input, 1) .. "\n}"
+    end,
+
+    serializeTable = function(input)
+        assert(typeof(input) ~= "table", "The first argument in serializeTable must be a Table!")
+        return Watermark .. "\nreturn {\n" .. Serializer:serializeTable(input, 1) .. "\n}"
+    end
+}
 
 --// Use this if u want "bypass" console max chars (may be laggy and glitchy but...)
 --[[
