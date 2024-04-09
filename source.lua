@@ -61,23 +61,20 @@ function Serializer:serializeTable(input, depth)
     return table.concat(output, "\n")
 end
 
-function Serializer:serializeJSON(input)
-	local success, result = pcall(function() 
-		return game:GetService("HttpService"):JSONDecode(input)
-	end)
-
-	assert(not success, "The first argument in serializeJSON must be a JSON!")
-
-	return self:serializeTable(result)
-end
-
 getgenv().Serializer = {
     serializeJSON = function(input)
-        return Watermark .. "\nreturn {\n" .. Serializer:serializeJSON(input, 1) .. "\n}"
+        local success, result = pcall(function() 
+            return game:GetService("HttpService"):JSONDecode(input)
+        end)
+
+        assert(not success, "The first argument in serializeJSON must be a JSON!")
+
+        return Watermark .. "\nreturn {\n" .. Serializer:serializeTable(result, 1) .. "\n}"
     end,
 
     serializeTable = function(input)
         assert(typeof(input) == "table", "The first argument in serializeTable must be a Table!")
+
         return Watermark .. "\nreturn {\n" .. Serializer:serializeTable(input, 1) .. "\n}"
     end
 }
