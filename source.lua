@@ -9,15 +9,15 @@ end
 
 function Serializer:getArguments(func)
     local args = {}
-    local funcInfo = debug.getinfo(func, "u")
+    local funcInfo = debug.getinfo(func)
 
-    if funcInfo.nparams then
+    if funcInfo.nups then
         for i = 1, funcInfo.nparams do
             table.insert(args, "arg" .. i)
         end
     end
 
-    if funcInfo.isvararg then
+    if funcInfo.is_varang then
         table.insert(args, "...")
     end
 
@@ -48,11 +48,11 @@ function Serializer:serializeTable(input, depth)
         local formattedStr = self:addTabSpaces(keyStr .. " = ", depth)
 
         if valueType == "table" then
-            formattedStr = formattedStr .. "{\n" .. self:serializeTable(value, depth + 1) .. "\n" .. self:addTabSpaces("},", depth)  .. "--" .. tostring(typeof(key)) .. "," .. tostring(typeof(value))
+            formattedStr = formattedStr .. "{\n" .. self:serializeTable(value, depth + 1) .. "\n" .. self:addTabSpaces("},", depth) .. " --" .. tostring(typeof(key)) .. ", " .. tostring(typeof(value))
         elseif valueType == "function" then
-            formattedStr = formattedStr .. self:serializeFunction(value, depth + 1) .. "," .. "--" .. tostring(typeof(key)) .. "," .. tostring(typeof(value))
+            formattedStr = formattedStr .. self:serializeFunction(value, depth + 1) .. "," .. " --" .. tostring(typeof(key)) .. ", " .. tostring(typeof(value))
         else
-            formattedStr = formattedStr .. string.format("%q", tostring(value)) .. "," .. "--" .. tostring(typeof(key)) .. "," .. tostring(typeof(value))
+            formattedStr = formattedStr .. string.format("%q", tostring(value)) .. "," .. " --" .. tostring(typeof(key)) .. ", " .. tostring(typeof(value))
         end
 
         table.insert(output, formattedStr)
@@ -71,7 +71,7 @@ function Serializer:serializeJSON(input)
 	return self:serializeTable(result)
 end
 
-return {
+getgenv().Serializer = {
     serializeJSON = function(input)
         return Watermark .. "\nreturn {\n" .. Serializer:serializeJSON(input, 1) .. "\n}"
     end,
