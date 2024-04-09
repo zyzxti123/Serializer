@@ -1,7 +1,7 @@
 ## Defining Serializer
 
 ```lua
-local Serializer = loadstring(game:HttpGet("https://raw.githubusercontent.com/zyzxti123/Serialize-Table/main/source.lua"))()
+local Serializer = loadstring(game:HttpGet("https://raw.githubusercontent.com/zyzxti123/Serializer/main/source.lua"))()
 ```
 
 ## Serializer Functions
