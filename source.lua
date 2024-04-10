@@ -43,7 +43,7 @@ function Serializer:serializeTable(input, depth)
     depth = depth or 0
 
     for key, value in pairs(input) do
-        local keyStr = string.format("[%q]", tostring(key))
+        local keyStr = string.format("[%s]", typeof(key) == "number" and tostring(key) or "'" .. tostring(key) .. "'")
         local valueType = type(value)
         local formattedStr = self:addTabSpaces(keyStr .. " = ", depth)
 
