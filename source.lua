@@ -97,7 +97,7 @@ function Serializer:serializeTable(input, depth)
     return table.concat(output, "\n")
 end
 
-getgenv().Serializer = {
+return {
     serializeJSON = function(input)
         local success, result = pcall(function() 
             return game:GetService("HttpService"):JSONDecode(input)
