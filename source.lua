@@ -9,17 +9,17 @@ end
 
 function Serializer:getArguments(func)
     local args = {}
-    --local funcInfo = debug.getinfo(func)
+    local funcInfo = debug.getinfo(func)
 
-    --if funcInfo.nups then
-    --    for i = 1, funcInfo.nups do
-    --        table.insert(args, "arg" .. i)
-     --   end
-    --end
+    if funcInfo.nups then
+        for i = 1, funcInfo.nups do
+            table.insert(args, "arg" .. i)
+        end
+    end
 
-    --if funcInfo.is_varang then
-    --    table.insert(args, "...")
-    --end
+    if funcInfo.is_varang then
+        table.insert(args, "...")
+    end
 
     return args
 end
@@ -32,8 +32,8 @@ function Serializer:serializeFunction(func, depth)
     local args = self:getArguments(func)
     local formattedArgs = self:formatArguments(args)
 
-    local output = self:addTabSpaces("function(" .. formattedArgs .. ")", depth)
-	output = output .. "\n" .. self:addTabSpaces("end", depth)
+    local output = " function(" .. formattedArgs .. ")"
+	  output = output .. "\n" .. self:addTabSpaces("end", depth)
 
     return output
 end
