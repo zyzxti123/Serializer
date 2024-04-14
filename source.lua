@@ -9,17 +9,17 @@ end
 
 function Serializer:getArguments(func)
     local args = {}
-    local funcInfo = debug.getinfo(func)
+    --local funcInfo = debug.getinfo(func)
 
-    if funcInfo.nups then
-        for i = 1, funcInfo.nups do
-            table.insert(args, "arg" .. i)
-        end
-    end
+    --if funcInfo.nups then
+    --    for i = 1, funcInfo.nups do
+    --        table.insert(args, "arg" .. i)
+     --   end
+    --end
 
-    if funcInfo.is_varang then
-        table.insert(args, "...")
-    end
+    --if funcInfo.is_varang then
+    --    table.insert(args, "...")
+    --end
 
     return args
 end
