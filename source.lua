@@ -12,7 +12,7 @@ function Serializer:getArguments(func)
     local funcInfo = debug.getinfo(func)
 
     if funcInfo.nups then
-        for i = 1, funcInfo.nparams do
+        for i = 1, funcInfo.nups do
             table.insert(args, "arg" .. i)
         end
     end
