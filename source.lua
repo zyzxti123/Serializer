@@ -1,7 +1,7 @@
 local Serializer = {}
 Serializer.__index = Serializer
 
-local Watermark = "--[["
+local Watermark =        "\n--[["
 Watermark = Watermark .. "\n@developer: zyzxti"
 Watermark = Watermark .. "\n@contact: zyzxti#2047"
 Watermark = Watermark .. "\n@usage: viewing refreshed tables/jsons, viewimg modules if you dont have executor, serializing table/json, formating table/json to string"
