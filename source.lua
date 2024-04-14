@@ -32,8 +32,8 @@ function Serializer:serializeFunction(func, depth)
     local args = self:getArguments(func)
     local formattedArgs = self:formatArguments(args)
 
-    local output = " function(" .. formattedArgs .. ")"
-	  output = output .. "\n"
+    local output = self:addTabSpaces("function(" .. formattedArgs .. ")", depth)
+	  output = output .. self:addTabSpaces("\n", depth)
 	  output = output .. self:addTabSpaces("end", depth)
 	
     return output
