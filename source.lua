@@ -33,8 +33,9 @@ function Serializer:serializeFunction(func, depth)
     local formattedArgs = self:formatArguments(args)
 
     local output = " function(" .. formattedArgs .. ")"
-	  output = output .. "\n" .. self:addTabSpaces("end", depth)
-
+	  output = output .. "\n"
+	  output = output .. self:addTabSpaces("end", depth)
+	
     return output
 end
 
@@ -69,13 +70,13 @@ return {
 
         assert(not success, "The first argument in serializeJSON must be a JSON!")
 
-        return Watermark .. "\nreturn {\n" .. Serializer:serializeTable(result, 1) .. "\n}"
+        return Watermark .. "\nreturn {\n" .. Serializer:serializeTable(result) .. "\n}"
     end,
 
     serializeTable = function(input)
         assert(typeof(input) == "table", "The first argument in serializeTable must be a Table!")
 
-        return Watermark .. "\nreturn {\n" .. Serializer:serializeTable(input, 1) .. "\n}"
+        return Watermark .. "\nreturn {\n" .. Serializer:serializeTable(input) .. "\n}"
     end
 }
 
