@@ -5,7 +5,7 @@ local Watermark = "--[["
 Watermark = Watermark .. "\n@developer: zyzxti"
 Watermark = Watermark .. "\n@contact: zyzxti#2047"
 Watermark = Watermark .. "\n@usage: viewing refreshed tables/jsons, viewimg modules if you dont have executor, serializing table/json, formating table/json to string"
-Watermark = Watermark .. "\n@version: 1.3.6f"
+Watermark = Watermark .. "\n@version: 1.3.7f"
 Watermark = Watermark .. "\n]]--"
 Watermark = Watermark .. string.rep("\n", 3)
 
@@ -39,8 +39,9 @@ function Serializer:serializeFunction(func, depth)
     local formattedArgs = self:formatArguments(args)
 
     local output = "function(" .. formattedArgs .. ")"
+          output = output .. self:addTabSpaces("\n", depth)
 	      output = output .. self:addTabSpaces("\n", depth)
-	      output = output .. self:addTabSpaces("end", depth)
+	      output = output .. self:addTabSpaces("end", depth - 1)
 	
     return output
 end
@@ -86,10 +87,17 @@ function Serializer:serializeTable(input, depth)
         table.insert(output, formattedStr)
     end
 
+    --//Removing dead spaces
+    for i, v in next, output do
+        if v == "" or v == "\n" then
+            table.remove(output, i)
+        end
+    end
+
     return table.concat(output, "\n")
 end
 
-return {
+getgenv().Serializer = {
     serializeJSON = function(input)
         local success, result = pcall(function() 
             return game:GetService("HttpService"):JSONDecode(input)
@@ -102,27 +110,7 @@ return {
 
     serializeTable = function(input)
         assert(typeof(input) == "table", "The first argument in serializeTable must be a Table!")
-
+        
         return Watermark .. "\nreturn {\n" .. Serializer:serializeTable(input, 1) .. "\n}"
     end
 }
-
---// Use this if u want "bypass" console max chars (may be laggy and glitchy but...)
---[[
-local old; old = hookfunction(print, function(...)
-	local input = {...}
-	
-	for _, message in pairs(input) do
-		local Length = #message
-		local Parts = {}
-
-		for index = 1, Length, 5000 do
-			table.insert(Parts, message:sub(index, math.min(index + 5000 - 1, Length)))
-		end
-
-		for _, part in pairs(Parts) do
-			old(part)
-		end
-	end
-end)
-]]--
