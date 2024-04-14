@@ -5,7 +5,7 @@ local Watermark = "--[["
 Watermark = Watermark .. "\n@developer: zyzxti"
 Watermark = Watermark .. "\n@contact: zyzxti#2047"
 Watermark = Watermark .. "\n@usage: viewing refreshed tables/jsons, viewimg modules if you dont have executor, serializing table/json, formating table/json to string"
-Watermark = Watermark .. "\n@version: 1.4.0"
+Watermark = Watermark .. "\n@version: 1.3.6f"
 Watermark = Watermark .. "\n]]--"
 Watermark = Watermark .. string.rep("\n", 3)
 
@@ -112,7 +112,7 @@ function Serializer:serializeTable(input, depth)
                            .. "," 
         end
 
-        if self.options.DebugKeysAndValues then
+        if self.options.DebugTypes then
             formattedStr = formattedStr
                            .. " --"
                            .. tostring(typeof(key))
@@ -135,7 +135,7 @@ end
 
 export type Options = {
     DebugFunctions: boolean?,
-    DebugKeysAndValues: boolean?
+    DebugTypes: boolean?
 }
 
 return function(options: Options?)
@@ -143,7 +143,7 @@ return function(options: Options?)
 
     self.options = options or {
         DebugFunctions = false, 
-        DebugKeysAndValues = true
+        DebugTypes = true
     }
 
     return {
