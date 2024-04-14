@@ -2,11 +2,12 @@ local Serializer = {}
 Serializer.__index = Serializer
 
 local Watermark = "--[["
-Watermark = Watermark .. "@developer: zyzxti"
-Watermark = Watermark .. "@contact: zyzxti#2047"
-Watermark = Watermark .. "@usage: viewing refreshed tables/jsons, viewimg modules if you dont have executor, serializing table/json, formating table/json to string"
-Watermark = Watermark .. "@version: 1.3.6f"
-Watermark = Watermark .. "]]--"
+Watermark = Watermark .. "\n@developer: zyzxti"
+Watermark = Watermark .. "\n@contact: zyzxti#2047"
+Watermark = Watermark .. "\n@usage: viewing refreshed tables/jsons, viewimg modules if you dont have executor, serializing table/json, formating table/json to string"
+Watermark = Watermark .. "\n@version: 1.3.6f"
+Watermark = Watermark .. "\n]]--"
+Watermark = Watermark .. string.rep("\n", 3)
 
 function Serializer:addTabSpaces(str, depth)
     return string.rep("\t", depth or 0) .. str
@@ -39,7 +40,7 @@ function Serializer:serializeFunction(func, depth)
 
     local output = "function(" .. formattedArgs .. ")"
 	      output = output .. self:addTabSpaces("\n", depth)
-	      output = output .. "end"
+	      output = output .. self:addTabSpaces("end", depth)
 	
     return output
 end
