@@ -152,7 +152,7 @@ return function(options: Options?)
                 return game:GetService("HttpService"):JSONDecode(input)
             end)
     
-            assert(not success, "The first argument in serializeJSON must be a JSON!")
+            assert(success, "The first argument in serializeJSON must be a JSON!")
     
             return Watermark .. "\nreturn {\n" .. self:serializeTable(result, 1) .. "\n}"
         end,
