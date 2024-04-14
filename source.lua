@@ -1,7 +1,12 @@
 local Serializer = {}
 Serializer.__index = Serializer
 
-local Watermark = "--[[\nTable/JSON serializer developed by - zyzxti#2047\ncan be useful when you want to see a refreshed table or when your executor does not have decompiler\nversion - 1.3\n]]--" --// dont delete it or u are skid
+local Watermark = "--[["
+Watermark = Watermark .. "@developer: zyzxti"
+Watermark = Watermark .. "@contact: zyzxti#2047"
+Watermark = Watermark .. "@usage: viewing refreshed tables/jsons, viewimg modules if you dont have executor, serializing table/json, formating table/json to string"
+Watermark = Watermark .. "@version: 1.3.6f"
+Watermark = Watermark .. "]]--"
 
 function Serializer:addTabSpaces(str, depth)
     return string.rep("\t", depth or 0) .. str
@@ -32,9 +37,9 @@ function Serializer:serializeFunction(func, depth)
     local args = self:getArguments(func)
     local formattedArgs = self:formatArguments(args)
 
-    local output = self:addTabSpaces("function(" .. formattedArgs .. ")", depth)
-	  output = output .. self:addTabSpaces("\n", depth)
-	  output = output .. self:addTabSpaces("end", depth)
+    local output = "function(" .. formattedArgs .. ")"
+	      output = output .. self:addTabSpaces("\n", depth)
+	      output = output .. "end"
 	
     return output
 end
@@ -49,11 +54,32 @@ function Serializer:serializeTable(input, depth)
         local formattedStr = self:addTabSpaces(keyStr .. " = ", depth)
 
         if valueType == "table" then
-            formattedStr = formattedStr .. "{\n" .. self:serializeTable(value, depth + 1) .. "\n" .. self:addTabSpaces("},", depth) .. " --" .. tostring(typeof(key)) .. ", " .. tostring(typeof(value))
+            formattedStr = formattedStr
+                           .. "{"
+                           .. "\n"
+                           .. self:serializeTable(value, depth + 1)
+                           .. "\n"
+                           .. self:addTabSpaces("},", depth)
+                           .. " --"
+                           .. tostring(typeof(key))
+                           .. ", "
+                           .. tostring(typeof(value))
         elseif valueType == "function" then
-            formattedStr = formattedStr .. self:serializeFunction(value, depth + 1) .. "," .. " --" .. tostring(typeof(key)) .. ", " .. tostring(typeof(value))
+            formattedStr = formattedStr
+                           .. self:serializeFunction(value, depth + 1)
+                           .. ","
+                           .. " --"
+                           .. tostring(typeof(key))
+                           .. ", "
+                           .. tostring(typeof(value))
         else
-            formattedStr = formattedStr .. string.format("%q", tostring(value)) .. "," .. " --" .. tostring(typeof(key)) .. ", " .. tostring(typeof(value))
+            formattedStr = formattedStr
+                           .. string.format("%q", tostring(value))
+                           .. "," 
+                           .. " --" 
+                           .. tostring(typeof(key))
+                           .. ", " 
+                           .. tostring(typeof(value))
         end
 
         table.insert(output, formattedStr)
@@ -70,13 +96,13 @@ return {
 
         assert(not success, "The first argument in serializeJSON must be a JSON!")
 
-        return Watermark .. "\nreturn {\n" .. Serializer:serializeTable(result) .. "\n}"
+        return Watermark .. "\nreturn {\n" .. Serializer:serializeTable(result, 1) .. "\n}"
     end,
 
     serializeTable = function(input)
         assert(typeof(input) == "table", "The first argument in serializeTable must be a Table!")
 
-        return Watermark .. "\nreturn {\n" .. Serializer:serializeTable(input) .. "\n}"
+        return Watermark .. "\nreturn {\n" .. Serializer:serializeTable(input, 1) .. "\n}"
     end
 }
 
