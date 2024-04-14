@@ -1,11 +1,11 @@
 local Serializer = {}
 Serializer.__index = Serializer
 
-local Watermark =        "\n--[["
+local Watermark = "--[["
 Watermark = Watermark .. "\n@developer: zyzxti"
 Watermark = Watermark .. "\n@contact: zyzxti#2047"
 Watermark = Watermark .. "\n@usage: viewing refreshed tables/jsons, viewimg modules if you dont have executor, serializing table/json, formating table/json to string"
-Watermark = Watermark .. "\n@version: 1.3.7f"
+Watermark = Watermark .. "\n@version: 1.4.0"
 Watermark = Watermark .. "\n]]--"
 Watermark = Watermark .. string.rep("\n", 3)
 
@@ -39,9 +39,49 @@ function Serializer:serializeFunction(func, depth)
     local formattedArgs = self:formatArguments(args)
 
     local output = "function(" .. formattedArgs .. ")"
-          output = output .. self:addTabSpaces("\n", depth)
-	      output = output .. self:addTabSpaces("\n", depth)
-	      output = output .. self:addTabSpaces("end", depth - 1)
+          
+    if self.options.DebugFunctions then
+        local getconstants = debug.getconstants
+        local getupvalues = debug.getupvalues
+        local getprotos = debug.getprotos
+
+        if getconstants and getupvalues and getprotos then
+            output = output .. self:addTabSpaces("\n", depth)
+            output = output .. self:addTabSpaces("------[[CONSTANTS]]------", depth)
+
+            local constants = {}
+            for i, v in next, getconstants(func) do
+                output = output .. self:addTabSpaces("\n", depth)
+                output = output .. self:addTabSpaces(tostring(i) .. " = " .. tostring(v), depth)
+            end
+    
+            output = output .. self:addTabSpaces("\n", depth)
+            output = output .. self:addTabSpaces("------[[UPVALUES]]-------", depth)
+
+            local upvalues = {}
+            for i, v in next, getupvalues(func) do
+                output = output .. self:addTabSpaces("\n", depth)
+                output = output .. self:addTabSpaces(tostring(i) .. " = " .. tostring(v), depth)
+            end
+    
+            output = output .. self:addTabSpaces("\n", depth)
+            output = output .. self:addTabSpaces("-------[[PROTOS]]--------", depth)
+
+            local protos = {}
+            for i, v in next, getprotos(func) do
+                output = output .. self:addTabSpaces("\n", depth)
+                output = output .. self:addTabSpaces(tostring(i) .. " = " .. tostring(v), depth)
+            end
+        else
+            output = output .. self:addTabSpaces("\n", depth)
+            output = output .. self:addTabSpaces("--DebugFunctions Not supported!", depth)
+        end
+    else
+        output = output .. self:addTabSpaces("\n", depth)
+    end
+
+	output = output .. self:addTabSpaces("\n", depth)
+    output = output .. self:addTabSpaces("end", depth - 1)
 	
     return output
 end
@@ -50,7 +90,7 @@ function Serializer:serializeTable(input, depth)
     local output = {}
     depth = depth or 0
 
-    for key, value in pairs(input) do
+    for key, value in next, input do
         local keyStr = string.format("[%s]", typeof(key) == "number" and tostring(key) or "'" .. tostring(key) .. "'")
         local valueType = type(value)
         local formattedStr = self:addTabSpaces(keyStr .. " = ", depth)
@@ -62,23 +102,19 @@ function Serializer:serializeTable(input, depth)
                            .. self:serializeTable(value, depth + 1)
                            .. "\n"
                            .. self:addTabSpaces("},", depth)
-                           .. " --"
-                           .. tostring(typeof(key))
-                           .. ", "
-                           .. tostring(typeof(value))
         elseif valueType == "function" then
             formattedStr = formattedStr
                            .. self:serializeFunction(value, depth + 1)
                            .. ","
-                           .. " --"
-                           .. tostring(typeof(key))
-                           .. ", "
-                           .. tostring(typeof(value))
         else
             formattedStr = formattedStr
                            .. string.format("%q", tostring(value))
                            .. "," 
-                           .. " --" 
+        end
+
+        if self.options.DebugKeysAndValues then
+            formattedStr = formattedStr
+                           .. " --"
                            .. tostring(typeof(key))
                            .. ", " 
                            .. tostring(typeof(value))
@@ -97,20 +133,34 @@ function Serializer:serializeTable(input, depth)
     return table.concat(output, "\n")
 end
 
-return {
-    serializeJSON = function(input)
-        local success, result = pcall(function() 
-            return game:GetService("HttpService"):JSONDecode(input)
-        end)
-
-        assert(not success, "The first argument in serializeJSON must be a JSON!")
-
-        return Watermark .. "\nreturn {\n" .. Serializer:serializeTable(result, 1) .. "\n}"
-    end,
-
-    serializeTable = function(input)
-        assert(typeof(input) == "table", "The first argument in serializeTable must be a Table!")
-        
-        return Watermark .. "\nreturn {\n" .. Serializer:serializeTable(input, 1) .. "\n}"
-    end
+export type Options = {
+    DebugFunctions: boolean?,
+    DebugKeysAndValues: boolean?
 }
+
+return function(options: Options?)
+    local self = setmetatable({}, Serializer)
+
+    self.options = options or {
+        DebugFunctions = false, 
+        DebugKeysAndValues = true
+    }
+
+    return {
+        serializeJSON = function(input)
+            local success, result = pcall(function() 
+                return game:GetService("HttpService"):JSONDecode(input)
+            end)
+    
+            assert(not success, "The first argument in serializeJSON must be a JSON!")
+    
+            return Watermark .. "\nreturn {\n" .. self:serializeTable(result, 1) .. "\n}"
+        end,
+    
+        serializeTable = function(input)
+            assert(typeof(input) == "table", "The first argument in serializeTable must be a Table!")
+    
+            return Watermark .. "\nreturn {\n" .. self:serializeTable(input, 1) .. "\n}"
+        end
+    }
+end
