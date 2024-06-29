@@ -156,7 +156,7 @@ function Serializer:serializeTable(input: {}, depth: number): string
                 formattedStr = formattedStr
                                .. "{"
                                .. "\n"
-                               .. self:serializeTable(value, depth + 1)
+                               .. _output
                                .. "\n"
                                .. self:addTabSpaces("},", depth)
             end
