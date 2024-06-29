@@ -35,48 +35,52 @@ function Serializer:formatArguments(args): string
 end
 
 --TODO: add more cool formating for values :)
-function Serializer:formatValue(val: any): string
-    local valueType: any = typeof(val)
+function Serializer:formatValue(value: any): string
+    local valueType: any = typeof(value)
 
-    if valueType == "string" then
-        return val
-    elseif valueType == "boolean" or valueType == "number" then
-        return tostring(val)
+    if valueType == nil and value == nil then
+        return "nil"
+    elseif valueType == "string" then
+        return string.format("%q", tostring(value))
+    elseif  valueType == "number" then
+        return value
+    elseif valueType == "boolean"  then
+        return tostring(value)
     elseif valueType == "CFrame" then
-        return string.format("CFrame.new(%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f)", val:GetComponents())
+        return string.format("CFrame.new(%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f)", value:GetComponents())
     elseif valueType == "Vector3" then
-        return string.format("Vector3.new(%f, %f, %f)", val.X, val.Y, val.Z)
+        return string.format("Vector3.new(%f, %f, %f)", value.X, value.Y, value.Z)
     elseif valueType == "Vector2" then 
-        return string.format("Vector2.new(%f, %f)", val.X, val.Y)
+        return string.format("Vector2.new(%f, %f)", value.X, value.Y)
     elseif valueType == "Color3" then
-        return string.format("Color3.new(%f, %f, %f)", val.R, val.G, val.B)
+        return string.format("Color3.new(%f, %f, %f)", value.R, value.G, value.B)
     elseif valueType == "BrickColor" then
-        return string.format("BrickColor.new('%s')", val.Name)
+        return string.format("BrickColor.new('%s')", value.Name)
     elseif valueType == "UDim2" then
-        return string.format("UDim2.new(%f, %d, %f, %d)", val.X.Scale, val.X.Offset, val.Y.Scale, val.Y.Offset)
+        return string.format("UDim2.new(%f, %d, %f, %d)", value.X.Scale, value.X.Offset, value.Y.Scale, value.Y.Offset)
     elseif valueType == "UDim" then
-        return string.format("UDim.new(%f, %d)", val.Scale, val.Offset)
+        return string.format("UDim.new(%f, %d)", value.Scale, value.Offset)
     elseif valueType == "EnumItem" then
-        return string.format("%s.%s", val.EnumType.Name, val.Name)
+        return string.format("%s.%s", value.EnumType.Name, value.Name)
     elseif valueType == "NumberSequence" then
         local keypoints: {string} = {}
 
-        for _, keypoint: NumberSequenceKeypoint in ipairs(val.Keypoints) do
+        for _, keypoint: NumberSequenceKeypoint in ipairs(value.Keypoints) do
             table.insert(keypoints, string.format("NumberSequenceKeypoint.new(%f, %f, %f)", keypoint.Time, keypoint.Value, keypoint.Envelope))
         end
 
         return string.format("NumberSequence.new({%s})", table.concat(keypoints, ", "))
     else
         --warn(valueType, "is not supported by self:formatValues(...)")
-        return string.format("%q", tostring(val))
+        return string.format("%q", tostring(value))
     end
 end
 
 function Serializer:removeEmptyStrings(tbl: {string}): {string}
     local result: {string} = {}
-    for _, val: string in ipairs(tbl) do
-        if val ~= "" --[[and val ~= "\n"]] then
-            table.insert(result, val)
+    for _, value: string in ipairs(tbl) do
+        if value == "\n" or value ~= "" then
+            table.insert(result, value)
         end
     end
     return result
@@ -135,10 +139,12 @@ function Serializer:serializeFunction(func: any, depth: number): string
 end
 
 function Serializer:serializeTable(input: {}, depth: number): string
-    local output = {}
+    local output: {string} = {}
     depth = depth or 0
 
-    for key: any, value: any in next, input do
+    for key: any, value: any in pairs(input) do
+        warn(key, value)
+
         local keyStr: string = string.format("[%s]", typeof(key) == "number" and tostring(key) or "'" .. tostring(key) .. "'")
         local valueType: any = typeof(value)
         local formattedStr: string = self:addTabSpaces(keyStr .. " = ", depth)
@@ -156,7 +162,7 @@ function Serializer:serializeTable(input: {}, depth: number): string
                            .. ","
         else
             formattedStr = formattedStr
-                           .. self:serializeValue(value)--string.format("%q", tostring(value))
+                           .. self:formatValue(value)
                            .. "," 
         end
 
@@ -171,7 +177,7 @@ function Serializer:serializeTable(input: {}, depth: number): string
         table.insert(output, formattedStr)
     end
 
-    return Watermark .. table.concat(self:removeEmptyStrings(output), "\n")
+    return table.concat(self:removeEmptyStrings(output), "\n")
 end
 
 export type Options = {
@@ -194,12 +200,12 @@ return function(options: Options?)
             end)
     
             assert(success, "The first argument in serializeJSON must be a JSON!")
-            return"\nreturn {\n" .. self:serializeTable(result, 1) .. "\n}"
+            return Watermark .. "\nreturn {\n" .. self:serializeTable(result, 1) .. "\n}"
         end,
     
         serializeTable = function(input)
             assert(typeof(input) == "table", "The first argument in serializeTable must be a Table!")
-            return "\nreturn {\n" .. self:serializeTable(input, 1) .. "\n}"
+            return Watermark .. "\nreturn {\n" .. self:serializeTable(input, 1) .. "\n}"
         end
     }
 end
