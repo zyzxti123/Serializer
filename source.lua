@@ -143,19 +143,23 @@ function Serializer:serializeTable(input: {}, depth: number): string
     depth = depth or 0
 
     for key: any, value: any in pairs(input) do
-        warn(key, value)
-
         local keyStr: string = string.format("[%s]", typeof(key) == "number" and tostring(key) or "'" .. tostring(key) .. "'")
         local valueType: any = typeof(value)
         local formattedStr: string = self:addTabSpaces(keyStr .. " = ", depth)
 
         if valueType == "table" then
-            formattedStr = formattedStr
-                           .. "{"
-                           .. "\n"
-                           .. self:serializeTable(value, depth + 1)
-                           .. "\n"
-                           .. self:addTabSpaces("},", depth)
+            local _output = self:serializeTable(value, depth + 1)
+            
+            if _output == "" or _output == "\n" then
+                formattedStr = formattedStr .. "{},"
+            else
+                formattedStr = formattedStr
+                               .. "{"
+                               .. "\n"
+                               .. self:serializeTable(value, depth + 1)
+                               .. "\n"
+                               .. self:addTabSpaces("},", depth)
+            end
         elseif valueType == "function" then
             formattedStr = formattedStr
                            .. self:serializeFunction(value, depth + 1)
