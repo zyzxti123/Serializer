@@ -38,8 +38,10 @@ end
 function Serializer:formatValue(val: any): string
     local valueType: any = typeof(val)
 
-    if valueType == "boolean" or valueType == "number" or valueType == "string" then
+    if valueType == "string" then
         return val
+    elseif valueType == "boolean" or valueType == "number" then
+        return tostring(val)
     elseif valueType == "CFrame" then
         return string.format("CFrame.new(%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f)", val:GetComponents())
     elseif valueType == "Vector3" then
@@ -154,7 +156,7 @@ function Serializer:serializeTable(input: {}, depth: number): string
                            .. ","
         else
             formattedStr = formattedStr
-                           .. self:formatValue(value)--string.format("%q", tostring(value))
+                           .. self:serializeValue(value)--string.format("%q", tostring(value))
                            .. "," 
         end
 
