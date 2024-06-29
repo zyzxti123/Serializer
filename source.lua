@@ -154,7 +154,7 @@ function Serializer:serializeTable(input: {}, depth: number): string
                            .. ","
         else
             formattedStr = formattedStr
-                           .. self:serializeValue(value)--string.format("%q", tostring(value))
+                           .. self:formatValue(value)--string.format("%q", tostring(value))
                            .. "," 
         end
 
