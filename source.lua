@@ -138,7 +138,10 @@ function Serializer:serializeFunction(func: any, depth: number): string
     return output
 end
 
-function Serializer:serializeTable(input: {}, depth: number): string
+type Array<Type> = {[number] : Type};
+type Dictionary<Type> = {[string] : Type};
+
+function Serializer:serializeTable(input: (Array | Dictionary), depth: number): string
     local output: {string} = {}
     depth = depth or 0
 
