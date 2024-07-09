@@ -5,7 +5,7 @@ local Watermark: string = ""
 Watermark = Watermark .. "--[["
 Watermark = Watermark .. "\n@developer: zyzxti"
 Watermark = Watermark .. "\n@contact: zyzxti#2047"
-Watermark = Watermark .. "\n@version: 1.4 | https://github.com/zyzxti123/Serializer"
+Watermark = Watermark .. "\n@version: 1.4.1 | https://github.com/zyzxti123/Serializer"
 Watermark = Watermark .. "\n]]--"
 Watermark = Watermark .. string.rep("\n", 3)
 
@@ -70,6 +70,8 @@ function Serializer:formatValue(value: any): string
         end
 
         return string.format("NumberSequence.new({%s})", table.concat(keypoints, ", "))
+    elseif valueType == "Instance" then
+        return value.Parent and value:GetFullName() or "nil -- Insatnce parent is nil failed to get full name!"
     else
         --warn(valueType, "is not supported by self:formatValues(...)")
         return string.format("%q", tostring(value))
