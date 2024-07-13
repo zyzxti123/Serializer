@@ -5,7 +5,7 @@ local Watermark: string = ""
 Watermark = Watermark .. "--[["
 Watermark = Watermark .. "\n@developer: zyzxti"
 Watermark = Watermark .. "\n@contact: zyzxti#2047"
-Watermark = Watermark .. "\n@version: 1.4.1 | https://github.com/zyzxti123/Serializer"
+Watermark = Watermark .. "\n@version: 1.4 | https://github.com/zyzxti123/Serializer"
 Watermark = Watermark .. "\n]]--"
 Watermark = Watermark .. string.rep("\n", 3)
 
@@ -148,7 +148,7 @@ function Serializer:serializeTable(input: (Array | Dictionary), depth: number): 
     depth = depth or 0
 
     for key: any, value: any in pairs(input) do
-        local keyStr: string = string.format("[%s]", typeof(key) == "number" and tostring(key) or "'" .. tostring(key) .. "'")
+        local keyStr: string = string.format("[%s]", typeof(key) == "number" and tostring(key) or '"' .. tostring(key) .. '"')
         local valueType: any = typeof(value)
         local formattedStr: string = self:addTabSpaces(keyStr .. " = ", depth)
 
