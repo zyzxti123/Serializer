@@ -7,7 +7,7 @@ Watermark ..= "\n@developer: zyzxti"
 Watermark ..= "\n@contact: zyzxti#2047"
 Watermark ..= "\n@version: 1.5 | https://github.com/zyzxti123/Serializer"
 Watermark ..= "\n]]--"
-Watermark ..= string.rep("\n", 3)
+Watermark ..= string.rep("\n", 2)
 
 function Serializer:addTabSpaces(str: string, depth: number): string
     return string.rep("\t", depth or 0) .. str
@@ -50,7 +50,7 @@ function Serializer:formatValue(value: any): string
     if valueType == nil and value == nil then
         return "nil"
     elseif valueType == "string" then
-        return string.format("%q", tostring(value))
+        return string.format("%q", self:formatString(tostring(value)))
     elseif  valueType == "number" then
         return value
     elseif valueType == "boolean"  then
