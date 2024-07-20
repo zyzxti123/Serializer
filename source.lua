@@ -5,7 +5,7 @@ local Watermark: string = ""
 Watermark = Watermark .. "--[["
 Watermark = Watermark .. "\n@developer: zyzxti"
 Watermark = Watermark .. "\n@contact: zyzxti#2047"
-Watermark = Watermark .. "\n@version: 1.4 | https://github.com/zyzxti123/Serializer"
+Watermark = Watermark .. "\n@version: 1.5 | https://github.com/zyzxti123/Serializer"
 Watermark = Watermark .. "\n]]--"
 Watermark = Watermark .. string.rep("\n", 3)
 
@@ -13,7 +13,7 @@ function Serializer:addTabSpaces(str: string, depth: number): string
     return string.rep("\t", depth or 0) .. str
 end
 
-function Serializer:getArguments(func): {string}
+function Serializer:getArguments(func: any): {string}
     local args: {string} = {}
     local funcInfo: {} = debug.getinfo(func)
 
@@ -30,8 +30,17 @@ function Serializer:getArguments(func): {string}
     return args
 end
 
-function Serializer:formatArguments(args): string
+function Serializer:formatArguments(args: any): string
     return args and #args > 0 and table.concat(args, ", ") or ""
+end
+
+function Serializer:formatString(input: string): string
+    local result: {string} = {}
+    for index: number = 1, #input do
+        local byte: number = string.byte(input, index)
+        table.insert(result, byte > 127 and "\\" .. byte or string.char(byte))
+    end
+    return table.concat(result)
 end
 
 --TODO: add more cool formating for values :)
@@ -64,17 +73,15 @@ function Serializer:formatValue(value: any): string
         return string.format("%s.%s", value.EnumType.Name, value.Name)
     elseif valueType == "NumberSequence" then
         local keypoints: {string} = {}
-
         for _, keypoint: NumberSequenceKeypoint in ipairs(value.Keypoints) do
             table.insert(keypoints, string.format("NumberSequenceKeypoint.new(%f, %f, %f)", keypoint.Time, keypoint.Value, keypoint.Envelope))
         end
-
         return string.format("NumberSequence.new({%s})", table.concat(keypoints, ", "))
     elseif valueType == "Instance" then
         return value.Parent and value:GetFullName() or "nil -- Insatnce parent is nil failed to get full name!"
     else
         --warn(valueType, "is not supported by self:formatValues(...)")
-        return string.format("%q", tostring(value))
+        return string.format("%q", self:formatString(tostring(value)))
     end
 end
 
@@ -128,7 +135,7 @@ function Serializer:serializeFunction(func: any, depth: number): string
             end
         else
             output = output .. self:addTabSpaces("\n", depth)
-            output = output .. self:addTabSpaces("--DebugFunctions Not supported!", depth)
+            output = output .. self:addTabSpaces("--DebugFunctions is not supported on your executor!", depth)
         end
     else
         output = output .. self:addTabSpaces("\n", depth)
