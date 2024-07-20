@@ -35,12 +35,12 @@ function Serializer:formatArguments(args: any): string
 end
 
 function Serializer:formatString(input: string): string
-    local result: {string} = {}
+    local result: string = ""
     for index: number = 1, #input do
         local byte: number = string.byte(input, index)
-        table.insert(result, byte > 127 and "\\" .. byte or string.char(byte))
+        result ..= byte > 127 and "\\" .. byte or string.char(byte)
     end
-    return table.concat(result)
+    return result
 end
 
 --TODO: add more cool formating for values :)
@@ -183,12 +183,8 @@ function Serializer:serializeTable(input: (Array | Dictionary), depth: number): 
     return table.concat(self:removeEmptyStrings(output), "\n")
 end
 
-export type Options = {
-    DebugFunctions: boolean?,
-    DebugTypes: boolean?
-}
-
-return function(options: Options?)
+type Options = {DebugFunctions: boolean?, DebugTypes: boolean?}
+getgenv().Serializer = function(options: Options?)
     local self = setmetatable({}, Serializer)
 
     self.options = options or {
