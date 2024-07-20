@@ -2,12 +2,12 @@ local Serializer = {}
 Serializer.__index = Serializer
 
 local Watermark: string = ""
-Watermark = Watermark .. "--[["
-Watermark = Watermark .. "\n@developer: zyzxti"
-Watermark = Watermark .. "\n@contact: zyzxti#2047"
-Watermark = Watermark .. "\n@version: 1.5 | https://github.com/zyzxti123/Serializer"
-Watermark = Watermark .. "\n]]--"
-Watermark = Watermark .. string.rep("\n", 3)
+Watermark ..= "--[["
+Watermark ..= "\n@developer: zyzxti"
+Watermark ..= "\n@contact: zyzxti#2047"
+Watermark ..= "\n@version: 1.5 | https://github.com/zyzxti123/Serializer"
+Watermark ..= "\n]]--"
+Watermark ..= string.rep("\n", 3)
 
 function Serializer:addTabSpaces(str: string, depth: number): string
     return string.rep("\t", depth or 0) .. str
@@ -107,42 +107,42 @@ function Serializer:serializeFunction(func: any, depth: number): string
         local getprotos = debug.getprotos
 
         if getconstants and getupvalues and getprotos then
-            output = output .. self:addTabSpaces("\n", depth)
-            output = output .. self:addTabSpaces("------[[CONSTANTS]]------", depth)
+            output ..= self:addTabSpaces("\n", depth)
+            output ..= self:addTabSpaces("------[[CONSTANTS]]------", depth)
 
             local constants = {}
             for i, v in next, getconstants(func) do
-                output = output .. self:addTabSpaces("\n", depth)
-                output = output .. self:addTabSpaces(tostring(i) .. " = " .. tostring(v), depth)
+                output ..= self:addTabSpaces("\n", depth)
+                output ..= self:addTabSpaces(tostring(i) .. " = " .. tostring(v), depth)
             end
     
-            output = output .. self:addTabSpaces("\n", depth)
-            output = output .. self:addTabSpaces("------[[UPVALUES]]-------", depth)
+            output ..= self:addTabSpaces("\n", depth)
+            output ..= self:addTabSpaces("------[[UPVALUES]]-------", depth)
 
             local upvalues = {}
             for i, v in next, getupvalues(func) do
-                output = output .. self:addTabSpaces("\n", depth)
-                output = output .. self:addTabSpaces(tostring(i) .. " = " .. tostring(v), depth)
+                output ..= self:addTabSpaces("\n", depth)
+                output ..= self:addTabSpaces(tostring(i) .. " = " .. tostring(v), depth)
             end
     
-            output = output .. self:addTabSpaces("\n", depth)
-            output = output .. self:addTabSpaces("-------[[PROTOS]]--------", depth)
+            output ..= self:addTabSpaces("\n", depth)
+            output ..= self:addTabSpaces("-------[[PROTOS]]--------", depth)
 
             local protos = {}
             for i, v in next, getprotos(func) do
-                output = output .. self:addTabSpaces("\n", depth)
-                output = output .. self:addTabSpaces(tostring(i) .. " = " .. tostring(v), depth)
+                output ..= self:addTabSpaces("\n", depth)
+                output ..= self:addTabSpaces(tostring(i) .. " = " .. tostring(v), depth)
             end
         else
-            output = output .. self:addTabSpaces("\n", depth)
-            output = output .. self:addTabSpaces("--DebugFunctions is not supported on your executor!", depth)
+            output ..= self:addTabSpaces("\n", depth)
+            output ..= self:addTabSpaces("--DebugFunctions is not supported on your executor!", depth)
         end
     else
-        output = output .. self:addTabSpaces("\n", depth)
+        output ..= self:addTabSpaces("\n", depth)
     end
 
-	output = output .. self:addTabSpaces("\n", depth)
-    output = output .. self:addTabSpaces("end", depth - 1)
+	output ..= self:addTabSpaces("\n", depth)
+    output ..= self:addTabSpaces("end", depth - 1)
 	
     return output
 end
@@ -163,31 +163,18 @@ function Serializer:serializeTable(input: (Array | Dictionary), depth: number): 
             local _output = self:serializeTable(value, depth + 1)
             
             if _output == "" or _output == "\n" then
-                formattedStr = formattedStr .. "{},"
+                formattedStr ..= "{},"
             else
-                formattedStr = formattedStr
-                               .. "{"
-                               .. "\n"
-                               .. _output
-                               .. "\n"
-                               .. self:addTabSpaces("},", depth)
+                formattedStr ..= "{" .. "\n" .. _output .. "\n" .. self:addTabSpaces("},", depth)
             end
         elseif valueType == "function" then
-            formattedStr = formattedStr
-                           .. self:serializeFunction(value, depth + 1)
-                           .. ","
+            formattedStr ..= self:serializeFunction(value, depth + 1) .. ","
         else
-            formattedStr = formattedStr
-                           .. self:formatValue(value)
-                           .. "," 
+            formattedStr ..= self:formatValue(value) .. "," 
         end
 
         if self.options.DebugTypes then
-            formattedStr = formattedStr
-                           .. " --"
-                           .. tostring(typeof(key))
-                           .. ", " 
-                           .. tostring(typeof(value))
+            formattedStr ..= " --" .. tostring(typeof(key)) .. ", " .. tostring(typeof(value))
         end
 
         table.insert(output, formattedStr)
