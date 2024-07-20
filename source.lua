@@ -184,7 +184,7 @@ function Serializer:serializeTable(input: (Array | Dictionary), depth: number): 
 end
 
 type Options = {DebugFunctions: boolean?, DebugTypes: boolean?}
-getgenv().Serializer = function(options: Options?)
+return function(options: Options?)
     local self = setmetatable({}, Serializer)
 
     self.options = options or {
