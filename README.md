@@ -13,13 +13,13 @@ local Serializer = loadstring(game:HttpGet("https://raw.githubusercontent.com/zy
 ```lua
 Serializer.serializeJSON(input: string): string
 ```
-Serializes data from JSON format to string.
+Serializes JSON into redeable string
 
 ### Serializing Table
 ```lua
 Serializer.serializeTable(input: table): string
 ```
-Serializes data from table to string
+Serializes table into redeable string
 
 ## Usage
 To use the serializer, simply call the corresponding function and pass the data to be serialized. For example:
