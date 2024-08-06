@@ -21,7 +21,7 @@ Serializer.serializeTable(input: table): string
 ```
 Serializes data from table to string
 
-### Usage
+## Usage
 To use the serializer, simply call the corresponding function and pass the data to be serialized. For example:
 ```lua
 local Serializer = loadstring(game:HttpGet("https://raw.githubusercontent.com/zyzxti123/Serializer/main/source.lua"))()({
@@ -36,5 +36,5 @@ local example = {
 warn(Serializer.serializeTable(example)) --> return { ["Hello Github"] = "Hello Github!" --string, string }
 ```
 
-### Why?
+## Why?
 Yes.
