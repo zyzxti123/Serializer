@@ -2,8 +2,8 @@
 
 ```lua
 local Serializer = loadstring(game:HttpGet("https://raw.githubusercontent.com/zyzxti123/Serializer/main/source.lua"))()({
-    DebugFunctions = false, --//showing constants, upvalues, protos in functions
-    DebugTypes = true --//showing types in generic loops (key, indexes, values etc.)
+    DebugFunctions = false, --// Show constants, upvalues, and protos in functions
+    DebugTypes = true --// Show all types for values and keys
 })
 ```
 
@@ -13,8 +13,28 @@ local Serializer = loadstring(game:HttpGet("https://raw.githubusercontent.com/zy
 ```lua
 Serializer.serializeJSON(input: string): string
 ```
+Serializes data from JSON format to string.
 
 ### Serializing Table
 ```lua
 Serializer.serializeTable(input: table): string
 ```
+Serializes data from table to string
+
+### Usage
+To use the serializer, simply call the corresponding function and pass the data to be serialized. For example:
+```lua
+local Serializer = loadstring(game:HttpGet("https://raw.githubusercontent.com/zyzxti123/Serializer/main/source.lua"))()({
+    DebugFunctions = false, --// Show constants, upvalues, and protos in functions
+    DebugTypes = true --// Show all types for values and keys
+})
+
+local example = {
+    ["Hello Github"] = "Hello Github!",
+]
+
+warn(Serializer.serializeTable(example)) --> return { ["Hello Github"] = "Hello Github!" --string, string }
+```
+
+### Why?
+Yes.
