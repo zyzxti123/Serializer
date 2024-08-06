@@ -5,7 +5,7 @@ local Watermark: string = ""
 Watermark ..= "--[["
 Watermark ..= "\n@developer: zyzxti"
 Watermark ..= "\n@contact: zyzxti#2047"
-Watermark ..= "\n@version: 1.5 | https://github.com/zyzxti123/Serializer"
+Watermark ..= "\n@version: 1.5.1 | https://github.com/zyzxti123/Serializer"
 Watermark ..= "\n]]--"
 Watermark ..= string.rep("\n", 2)
 
