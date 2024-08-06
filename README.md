@@ -30,8 +30,8 @@ local Serializer = loadstring(game:HttpGet("https://raw.githubusercontent.com/zy
 })
 
 local example = {
-    ["Hello Github"] = "Hello Github!",
-]
+    ["Hello Github"] = "Hello Github!"
+}
 
 warn(Serializer.serializeTable(example)) --> return { ["Hello Github"] = "Hello Github!" --string, string }
 ```
