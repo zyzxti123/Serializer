@@ -43,16 +43,33 @@ function Serializer:formatString(input: string): string
     return result
 end
 
---TODO: add more cool formating for values :)
+function Serializer:removeDotZero(num: number): string
+	num = string.format("%.2f", num)
+	return num:match("%.00$") and num:gsub("%.00$", "") or num
+end
+
+function Serializer:formatNumber(num: number): string
+    if num == math.huge then
+        return "math.huge"
+    elseif num == math.huge then
+        return "-math.huge"
+    elseif num == 0/0 then
+        return "0/0"
+    elseif num == -0/0 then
+        return "-0/0"
+    end
+    return string.format("%.2e", num)
+end
+
 function Serializer:formatValue(value: any): string
     local valueType: any = typeof(value)
 
     if valueType == nil and value == nil then
         return "nil"
     elseif valueType == "string" then
-        return string.format("%q", self:formatString(tostring(value)))
+        return self:formatString(value)
     elseif  valueType == "number" then
-        return value
+        return self:formatNumber(value)
     elseif valueType == "boolean"  then
         return tostring(value)
     elseif valueType == "CFrame" then
@@ -78,10 +95,10 @@ function Serializer:formatValue(value: any): string
         end
         return string.format("NumberSequence.new({%s})", table.concat(keypoints, ", "))
     elseif valueType == "Instance" then
-        return value.Parent and value:GetFullName() or "nil -- Insatnce parent is nil failed to get full name!"
+        local fullName: string = value:GetFullName()
+        return fullName:find(" ") and fullName or fullName
     else
-        --warn(valueType, "is not supported by self:formatValues(...)")
-        return string.format("%q", self:formatString(tostring(value)))
+        return self:formatString(tostring(value))
     end
 end
 
@@ -110,7 +127,6 @@ function Serializer:serializeFunction(func: any, depth: number): string
             output ..= self:addTabSpaces("\n", depth)
             output ..= self:addTabSpaces("------[[CONSTANTS]]------", depth)
 
-            local constants = {}
             for i, v in next, getconstants(func) do
                 output ..= self:addTabSpaces("\n", depth)
                 output ..= self:addTabSpaces(tostring(i) .. " = " .. tostring(v), depth)
@@ -119,7 +135,6 @@ function Serializer:serializeFunction(func: any, depth: number): string
             output ..= self:addTabSpaces("\n", depth)
             output ..= self:addTabSpaces("------[[UPVALUES]]-------", depth)
 
-            local upvalues = {}
             for i, v in next, getupvalues(func) do
                 output ..= self:addTabSpaces("\n", depth)
                 output ..= self:addTabSpaces(tostring(i) .. " = " .. tostring(v), depth)
@@ -127,8 +142,7 @@ function Serializer:serializeFunction(func: any, depth: number): string
     
             output ..= self:addTabSpaces("\n", depth)
             output ..= self:addTabSpaces("-------[[PROTOS]]--------", depth)
-
-            local protos = {}
+            
             for i, v in next, getprotos(func) do
                 output ..= self:addTabSpaces("\n", depth)
                 output ..= self:addTabSpaces(tostring(i) .. " = " .. tostring(v), depth)
@@ -160,12 +174,12 @@ function Serializer:serializeTable(input: (Array | Dictionary), depth: number): 
         local formattedStr: string = self:addTabSpaces(keyStr .. " = ", depth)
 
         if valueType == "table" then
-            local _output = self:serializeTable(value, depth + 1)
+            local tbl: string = self:serializeTable(value, depth + 1)
             
-            if _output == "" or _output == "\n" then
+            if tbl == "" or tbl == "\n" then
                 formattedStr ..= "{},"
             else
-                formattedStr ..= "{" .. "\n" .. _output .. "\n" .. self:addTabSpaces("},", depth)
+                formattedStr ..= "{" .. "\n" .. tbl .. "\n" .. self:addTabSpaces("},", depth)
             end
         elseif valueType == "function" then
             formattedStr ..= self:serializeFunction(value, depth + 1) .. ","
@@ -188,7 +202,7 @@ return function(options: Options?)
     local self = setmetatable({}, Serializer)
 
     self.options = options or {
-        DebugFunctions = false, 
+        DebugFunctions = false,
         DebugTypes = true
     }
 
