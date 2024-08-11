@@ -5,7 +5,7 @@ local Watermark: string = ""
 Watermark ..= "--[["
 Watermark ..= "\n@developer: zyzxti"
 Watermark ..= "\n@contact: zyzxti#2047"
-Watermark ..= "\n@version: 1.5.1 | https://github.com/zyzxti123/Serializer"
+Watermark ..= "\n@version: 1.5.2 | https://github.com/zyzxti123/Serializer"
 Watermark ..= "\n]]--"
 Watermark ..= string.rep("\n", 2)
 
@@ -44,8 +44,8 @@ function Serializer:formatString(input: string): string
 end
 
 function Serializer:removeDotZero(num: number): string
-	num = string.format("%.2f", num)
-	return num:match("%.00$") and num:gsub("%.00$", "") or num
+    num = string.format("%.2f", num)
+    return num:match("%.00$") and num:gsub("%.00$", "") or num
 end
 
 function Serializer:formatNumber(num: number): string
@@ -67,7 +67,7 @@ function Serializer:formatValue(value: any): string
     if valueType == nil and value == nil then
         return "nil"
     elseif valueType == "string" then
-        return self:formatString(value)
+        return '"' .. self:formatString(value) .. '"'
     elseif  valueType == "number" then
         return self:formatNumber(value)
     elseif valueType == "boolean"  then
