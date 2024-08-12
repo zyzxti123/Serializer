@@ -69,7 +69,7 @@ function Serializer:formatValue(value: any): string
     elseif valueType == "string" then
         return '"' .. self:formatString(value) .. '"'
     elseif  valueType == "number" then
-        return self:formatNumber(value)
+        return value --self:formatNumber(value)
     elseif valueType == "boolean"  then
         return tostring(value)
     elseif valueType == "CFrame" then
