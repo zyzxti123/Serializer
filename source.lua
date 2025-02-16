@@ -93,11 +93,12 @@ Serializer.FormatString = function(self, input: string): string
 		["\v"] = "\\v",
 		["\f"] = "\\f",
 		["\r"] = "\\r",
+		["/"] = "\\/"
 	}
 	
-	return string_gsub(string_gsub(input, "[%z\\\"\1-\31\127-\255]", function(character: string)
+	return string_gsub(string_gsub(input, "[%z\\\"/\1-\31\127-\255]", function(character: string)
 		return specialCharacters[character] and specialCharacters[character] or "\\" .. string_byte(character)
-	end), '"', "'")
+	end), '"', '\"')
 end
 
 --[[
@@ -253,6 +254,10 @@ Serializer.FormatValue = function(self, input: any): string
 		return string_format("NumberSequence.new({%s})", table_concat(keypoints, ", "))
 	end
 	
+	inputTypeHandlers["NumberRange"] = function()
+		return string_format("NumberRange.new(%f, %f)", input.Min, input.Max)
+	end
+	
 	inputTypeHandlers["Instance"] = function() 
 		return self:FormatInstancePath(input)
 	end
@@ -386,7 +391,7 @@ Serializer.SerializeTable = function(self, input: (Array | Dictionary), depth: n
 			local serializedTable: string = self:SerializeTable(value, depth + 1)
 
 			if serializedTable == "" or serializedTable == "\n" then
-				valueString = "{}"
+				valueString = "{},"
 			else
 				valueString = string_format("{\n%s\n%s},", serializedTable, self:AddTabulators("", depth))
 			end
@@ -400,10 +405,10 @@ Serializer.SerializeTable = function(self, input: (Array | Dictionary), depth: n
 			local debugTypeInfo = string_format(" --%s, %s", tostring(typeof(key)), tostring(typeof(value)))
 			
 			if typeof(value) == "Instance" then
-				debugTypeInfo = debugTypeInfo .. string_format(" (ClassName: %s)", value.ClassName)
+				debugTypeInfo ..= string_format(" (ClassName: %s)", value.ClassName)
 			end
 			
-			valueString = valueString .. debugTypeInfo
+			valueString ..= debugTypeInfo
 		end
 		
 		table.insert(output, string_format("%s = %s", keyString, valueString))
