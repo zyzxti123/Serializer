@@ -27,7 +27,7 @@ local Watermark: string = ""
 Watermark ..= "--[["
 Watermark ..= "\n\t@developer: zyzxti"
 Watermark ..= "\n\t@contact: zyzxti#2047"
-Watermark ..= "\n\t@version: 0.8.5 | https://github.com/zyzxti123/Serializer"
+Watermark ..= "\n\t@version: 0.8.4 | https://github.com/zyzxti123/Serializer"
 Watermark ..= "\n]]--"
 Watermark ..= string_rep("\n", 2)
 
@@ -533,6 +533,20 @@ return function(options: Options?)
 			end)
 			
 			return success and results or Exception(results)
-		end
+		end,
+		
+		serializeMetatable = function(input: (Array<any> | Dictionary<any, any>)): string
+			assert(typeof(input) == "table", "The first argument in serializeTable must be a Table!")
+
+			local function Exception(result)
+				return string_format("Failed to serializeMetatable: %s\nTraceback: %s", result, debug_traceback())
+			end
+
+			local success, results = pcall(function() 
+				return  string_format("%s\nreturn %s", Watermark, self:SerializeMetatable(input, 1))
+			end)
+
+			return success and results or Exception(results)
+		end,
 	}
 end
