@@ -21,6 +21,7 @@ local debug_getupvalues = debug["getupvalues"]
 local debug_getprotos = debug["getprotos"]
 local debug_getinfo = debug["getinfo"]
 local debug_info = debug.info
+local debug_traceback = debug.traceback
 
 local Watermark: string = ""
 Watermark ..= "--[["
@@ -500,19 +501,38 @@ return function(options: Options?)
 
 	return {
 		serializeJSON = function(input: string): string
-			local success, result = pcall(function() 
+			assert(typeof(input) == "string", "The first argument in serializeJSON must be a string!")
+			
+			local function Exception(result)
+				return string_format("Failed to serializeJSON %s\nTraceback: %s", result, debug_traceback())
+			end
+
+			local success, results = pcall(function() 
 				return game:GetService("HttpService"):JSONDecode(input)
 			end)
 
-			assert(success, result)
-
-			return string_format("%s\nreturn {\n%s\n}", Watermark, self:SerializeTable(result, 1))
+			if success then
+				local success, results = pcall(function() 
+					return string_format("%s\nreturn {\n%s\n}", Watermark, self:SerializeTable(results, 1))
+				end)
+				return success and results or Exception(results)
+			end
+			
+			return Exception(results)
 		end,
 
 		serializeTable = function(input: (Array<any> | Dictionary<any, any>)): string
 			assert(typeof(input) == "table", "The first argument in serializeTable must be a Table!")
-
-			return string_format("%s\nreturn {\n%s\n}", Watermark, self:SerializeTable(input, 1))
+			
+			local function Exception(result)
+				return string_format("Failed to serializeTable: %s\nTraceback: %s", result, debug_traceback())
+			end
+			
+			local success, results = pcall(function() 
+				return  string_format("%s\nreturn {\n%s\n}", Watermark, self:SerializeTable(input, 1))
+			end)
+			
+			return success and results or Exception(results)
 		end
 	}
 end
