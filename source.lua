@@ -1,4 +1,5 @@
-local Serializer = {}
+--!strict
+local Serializer = {Cache = {}}
 Serializer.__index = Serializer
 
 --https://www.lua.org/gems/sample.pdf
@@ -15,22 +16,22 @@ local string_rep = string.rep
 local table_insert = table.insert
 local table_remove = table.remove
 local table_concat = table.concat
-local debug_getconstants = debug.getconstants
-local debug_getupvalues = debug.getupvalues
-local debug_getprotos = debug.getprotos
+local debug_getconstants = debug["getconstants"]
+local debug_getupvalues = debug["getupvalues"]
+local debug_getprotos = debug["getprotos"]
+local debug_getinfo = debug["getinfo"]
 local debug_info = debug.info
-local debug_getinfo = debug.getinfo
 
 local Watermark: string = ""
 Watermark ..= "--[["
-Watermark ..= "\n@developer: zyzxti"
-Watermark ..= "\n@contact: zyzxti#2047"
-Watermark ..= "\n@version: 0.8.3 | https://github.com/zyzxti123/Serializer"
+Watermark ..= "\n\t@developer: zyzxti"
+Watermark ..= "\n\t@contact: zyzxti#2047"
+Watermark ..= "\n\t@version: 0.8.4 | https://github.com/zyzxti123/Serializer"
 Watermark ..= "\n]]--"
 Watermark ..= string_rep("\n", 2)
 
 type Array<Type> = {[number] : Type}
-type Dictionary<Type> = {[string] : Type}
+type Dictionary<Type1, Type2> = {[Type1] : Type2}
 type Options = {
 	DebugFunctions: boolean?, 
 	DebugTypes: boolean?,
@@ -43,7 +44,7 @@ type Options = {
 Serializer.AddTabulators = function(self, input: string, depth: number?): string -- WIP function
 	assert(typeof(input) == "string", "Expected input to be a string")
 	assert(typeof(depth) == "number", "Expected depth to be a number")
-	
+
 	return string_rep("\t", depth or 0) .. input
 end
 
@@ -64,7 +65,7 @@ Serializer.AddSingleLineComment = function(self, input: string, comment: string?
 	assert(typeof(input) == "string", "Expected input to be a string")
 	assert(typeof(comment) == "string" or comment == nil, "Expected comment to be a string")
 
-	return string_format("%s -- %s", input, comment) or input
+	return string_format("%s -- %s", input, comment or "") or input
 end
 
 --[[
@@ -82,7 +83,7 @@ end
 ]]--
 Serializer.FormatString = function(self, input: string): string
 	assert(typeof(input) == "string", "Expected input to be a string")
-	
+
 	local specialCharacters: {[string]: string} = {
 		["\""] = "\\\"",
 		["\\"] = "\\\\",
@@ -95,7 +96,7 @@ Serializer.FormatString = function(self, input: string): string
 		["\r"] = "\\r",
 		["/"] = "\\/"
 	}
-	
+
 	return string_gsub(string_gsub(input, "[%z\\\"/\1-\31\127-\255]", function(character: string)
 		return specialCharacters[character] and specialCharacters[character] or "\\" .. string_byte(character)
 	end), '"', '\"')
@@ -107,7 +108,7 @@ end
 Serializer.RemoveDotZero = function(self, number: number, precision: number?): string
 	assert(typeof(number) == "number", "Expected number to be a number")
 	assert(precision and typeof(number) == "number" or not precision, "Expected precision to be a number")
-	
+
 	return string_gsub(string_format("%." .. (precision or 2) .. "f", number), "%.?0+$", "")
 end
 
@@ -116,7 +117,7 @@ end
 ]]--
 Serializer.FormatNumber = function(self, number: number): string
 	assert(typeof(number) == "number", "Expected number to be a number")
-	
+
 	if number == math.huge then
 		return "math.huge"
 	elseif number == -math.huge then
@@ -126,7 +127,7 @@ Serializer.FormatNumber = function(self, number: number): string
 	elseif number == -0/0 then
 		return "-0/0"
 	end
-	
+
 	return number >= 2^63-1 and string_format("%.2e", number) or tostring(number) --string_format("%.2f", num)
 end
 
@@ -137,23 +138,75 @@ Serializer.IsService = function(self, className: string): boolean
 	local success: boolean, results: any = pcall(function() 
 		return game:FindService(className)
 	end)
-	
+
 	return success, results
+end
+
+--[[
+	Checks if table is a Array from the input table.
+]]--
+Serializer.IsArray = function(self, input: (Array<any> | Dictionary<any, any>)): boolean
+	assert(typeof(input) == "table", "Expected input to be a table")
+	
+	local count = 0
+	for key: any in pairs(input) do
+		if typeof(key) ~= "number" or key < 1 or math.floor(key) ~= key then
+			return false
+		end
+		count += 1
+	end
+	
+	return count == #input
+end
+
+Serializer.GetSortedKeyValuePairs = function(self, input: (Array<any> | Dictionary<any, any>)): Dictionary<any, any>
+	local keys: Array<string> = {}
+	for key: any, _ in pairs(input) do
+		table.insert(keys, key)
+	end
+
+	table.sort(keys, function(a, b)
+		local typeA: any, typeB: any = typeof(a), typeof(b)
+
+		if typeA == typeB then
+			if typeA == "number" then
+				return a < b
+			elseif typeA == "string" then
+				return a < b
+			else
+				return tostring(a) < tostring(b)
+			end
+		end
+
+		if typeA == "number" then return true end
+		if typeB == "number" then return false end
+		if typeA == "string" then return true end
+		if typeB == "string" then return false end
+
+		return tostring(typeA) < tostring(typeB)
+	end)
+
+	local sorted: Dictionary<any, any> = {}
+	for _, key: any in ipairs(keys) do
+		sorted[key] = input[key]
+	end
+
+	return sorted
 end
 
 --[[
 	Removes empty strings from the input table.
 ]]--
-Serializer.RemoveEmptyStrings = function(self, input: {string}): {string}
+Serializer.RemoveEmptyStrings = function(self, input: Array<string>): Array<string>
 	assert(typeof(input) == "table", "Expected input to be a table")
-	
-	local output: {string} = {}
+
+	local output: Array<string> = {}
 	for _, value in ipairs(input) do
 		if value and string_len(value) > 0 and string_match(value, "%S") then
 			table_insert(output, value)
 		end
 	end
-	
+
 	return output
 end
 
@@ -162,15 +215,15 @@ end
 ]]--
 Serializer.FormatInstancePath = function(self, instance: Instance): string
 	assert(typeof(instance) == "Instance", "Expected instance to be an Instance")
-	
+
 	local isServiceInstance: boolean, serviceInstance: Instance = self:IsService(instance.ClassName)
 	if isServiceInstance and serviceInstance then
 		return string_format("game:GetService('%s')", instance.ClassName)
 	end
 
 	local instancePath: string = instance:GetFullName()
-	local instancePathParts: {string} = instancePath:split(".")
-	local formattedInstancePathParts: {string} = {}
+	local instancePathParts: Array<string> = instancePath:split(".")
+	local formattedInstancePathParts: Array<string> = {}
 
 	for i = 1, #instancePathParts do
 		local instancePathPart: string = instancePathParts[i]
@@ -182,7 +235,7 @@ Serializer.FormatInstancePath = function(self, instance: Instance): string
 			table_insert(formattedInstancePathParts, string_find(instancePathPart, "[%s%p]") and string_format("['%s']", instancePathPart) or instancePathPart)
 		end
 	end
-	
+
 	return "game." .. string_gsub(table_concat(formattedInstancePathParts, "."), ".%[", "[")
 end
 
@@ -192,72 +245,72 @@ end
 Serializer.FormatValue = function(self, input: any): string
 	local inputType: any = typeof(input)
 	local inputTypeHandlers: {[string]: (...any) -> (...any)} = {}
-	
+
 	inputTypeHandlers["nil"] = function() 
 		return "nil" 
 	end
-	
+
 	inputTypeHandlers["string"] = function() 
 		return '"' .. self:FormatString(input) .. '"'
 	end
-	
+
 	inputTypeHandlers["number"] = function()
 		return self:FormatNumber(input) 
 	end
-	
+
 	inputTypeHandlers["boolean"] = function() 
 		return input and "true" or "false" 
 	end
-	
+
 	inputTypeHandlers["CFrame"] = function() 
 		return string_format("CFrame.new(%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f)", input:GetComponents()) 
 	end
-	
+
 	inputTypeHandlers["Vector3"] = function() 
 		return string_format("Vector3.new(%f, %f, %f)", input.X, input.Y, input.Z) 
 	end
-	
+
 	inputTypeHandlers["Vector2"] = function() 
 		return string_format("Vector2.new(%f, %f)", input.X, input.Y) 
 	end
-	
+
 	inputTypeHandlers["Color3"] = function() 
 		return string_format("Color3.new(%f, %f, %f)", input.R, input.G, input.B) 
 	end
-	
+
 	inputTypeHandlers["BrickColor"] = function() 
 		return string_format("BrickColor.new('%s')", input.Name) 
 	end
-	
+
 	inputTypeHandlers["UDim2"] = function() 
 		return string_format("UDim2.new(%f, %d, %f, %d)", input.X.Scale, input.X.Offset, input.Y.Scale, input.Y.Offset) 
 	end
-	
+
 	inputTypeHandlers["UDim"] = function() 
 		return string_format("UDim.new(%f, %d)", input.Scale, input.Offset) 
 	end
-	
+
 	inputTypeHandlers["EnumItem"] = function() 
 		return tostring(input)
 	end
-	
+
 	inputTypeHandlers["DateTime"] = function()
 		return "DateTime.fromUnixTimestamp(" .. input.UnixTimestamp .. ")"
 	end
-	
+
 	inputTypeHandlers["NumberSequence"] = function()
 		local keypoints = {}
 		for _, keypoint in ipairs(input.Keypoints) do
 			table_insert(keypoints, string_format("NumberSequenceKeypoint.new(%f, %f, %f)", keypoint.Time, keypoint.Value, keypoint.Envelope))
 		end
-		
+
 		return string_format("NumberSequence.new({%s})", table_concat(keypoints, ", "))
 	end
-	
+
 	inputTypeHandlers["NumberRange"] = function()
 		return string_format("NumberRange.new(%f, %f)", input.Min, input.Max)
 	end
-	
+
 	inputTypeHandlers["Instance"] = function() 
 		return self:FormatInstancePath(input)
 	end
@@ -265,19 +318,19 @@ Serializer.FormatValue = function(self, input: any): string
 	--inputTypeHandlers["function"] = function() 
 	--	return self:serializeFunction(val, 1) .. " -- ???"
 	--end
-	
+
 	return inputTypeHandlers[inputType] and inputTypeHandlers[inputType]() or self:FormatString(tostring(input))
 end
 
 --[[
 	Gets the arguments of a function.
 ]]--
-Serializer.GetFunctionArguments = function(self, func: (...any) -> (...any)): {string}
+Serializer.GetFunctionArguments = function(self, func: (...any) -> (...any)): Array<string>
 	assert(typeof(func) == "function", "Expected func to be a function")
-	
-	local functionArguments: {string} = {}
+
+	local functionArguments: Array<string> = {}
 	if debug_getinfo then
-		local functionDebugInfo: {} = debug_getinfo(func)
+		local functionDebugInfo: Dictionary<any, any> = debug_getinfo(func)
 		if functionDebugInfo.nups then
 			for i = 1, functionDebugInfo.nups do
 				table_insert(functionArguments, "arg" .. i)
@@ -293,7 +346,7 @@ Serializer.GetFunctionArguments = function(self, func: (...any) -> (...any)): {s
 			table_insert(functionArguments, "arg" .. i)
 		end
 	end
-	
+
 	return functionArguments
 end
 
@@ -302,7 +355,7 @@ end
 ]]--
 Serializer.FormatFunctionArguments = function(self, functionArguments: {string}): string
 	assert(typeof(functionArguments) == "table", "Expected input to be a table")
-	
+
 	return #functionArguments > 0 and table_concat(functionArguments, ", ") or ""
 end
 
@@ -316,7 +369,7 @@ Serializer.SerializeFunction = function(self, func: (...any) -> (...any), depth:
 	local functionLine = debug_info(func, "l")
 	local functionName = debug_info(func, "n")
 	local functionArguments = self:FormatFunctionArguments(self:GetFunctionArguments(func))
-	
+
 	local output = string_format("function(%s)", functionArguments)
 
 	if self.Options.DebugFunctions then
@@ -324,32 +377,32 @@ Serializer.SerializeFunction = function(self, func: (...any) -> (...any), depth:
 
 		if debug_getconstants and debug_getupvalues and debug_getprotos then
 			output ..= self:AddTabulators("\n", depth)
-			output ..= self:AddTabulators("-- [[ Constants:", depth)
 
+			output ..= self:AddTabulators("--[[ Constants:", depth)
 			for i, v in next, debug_getconstants(func) do
 				output ..= self:AddTabulators("\n", depth + 1)
-				output ..= self:AddTabulators(string_format("%s = %s", tostring(i), tostring(v)), depth)
+				output ..= self:AddTabulators(string_format("%s = %s", tostring(i), tostring(v)), depth + 2)
 			end
+			output ..= "\n"
+			output ..= self:AddTabulators("]]--", depth)
+			output ..= string_rep("\n", 2)
 
-			output ..= self:AddTabulators("]] --", depth)
-			output ..= self:AddTabulators("\n", depth)
-
-			output ..= self:AddTabulators("-- [[ Upvalues:", depth)
+			output ..= self:AddTabulators("--[[ Upvalues:", depth)
 			for i, v in next, debug_getupvalues(func) do
-				output ..= self:AddTabulators("\n", depth + 1)
-				output ..= self:AddTabulators(string_format("%s = %s", tostring(i), tostring(v)), depth)
+				output ..= "\n"
+				output ..= self:AddTabulators(string_format("%s = %s", tostring(i), tostring(v)), depth + 2)
 			end
-			output ..= self:AddTabulators("]] --", depth)
-			output ..= self:AddTabulators("\n", depth)
+			output ..= "\n"
+			output ..= self:AddTabulators("]]--", depth)
+			output ..= string_rep("\n", 2)
 
-			output ..= self:AddTabulators("-- [[ Protos:", depth)
+			output ..= self:AddTabulators("--[[ Protos:", depth)
 			for i, v in next, debug_getprotos(func) do
-				output ..= self:AddTabulators("\n", depth + 1)
-				output ..= self:AddTabulators(string_format("%s = %s", tostring(i), tostring(v)), depth)
+				output ..= "\n"
+				output ..= self:AddTabulators(string_format("%s = %s", tostring(i), tostring(v)), depth + 2)
 			end
-			output ..= self:AddTabulators("\n", depth)
-			output ..= self:AddTabulators("]] --", depth)
-
+			output ..= "\n"
+			output ..= self:AddTabulators("]]--", depth)
 		else
 			output ..= self:AddTabulators("\n", depth)
 			output ..= self:AddTabulators("-- DebugFunctions is not supported on your executor!", depth)
@@ -367,59 +420,78 @@ end
 --[[
 	Serializes a given metatable into a string format.
 ]]--
-Serializer.SerializeMetatable = function(self, input: (Array | Dictionary), depth: number): string
+Serializer.SerializeMetatable = function(self, input: (Array<any> | Dictionary<any, any>), depth: number): string
 	assert(typeof(input) == "table", "Expected input to be a table")
 	assert(typeof(depth) == "number", "Expected depth to be a number")
+	
+	local serializedTable: string = self:SerializeTable(input, depth)
+	local serializedMetatable: string = self:SerializeTable(getmetatable(input::any), depth)
+	return string_format("setmetatable({\n%s\n%s}, {\n%s\n%s})", serializedTable, self:AddTabulators("", depth - 1), serializedMetatable, self:AddTabulators("", depth - 1))
 end
 
 --[[
 	Serializes a given table into a string format.
 ]]--
-Serializer.SerializeTable = function(self, input: (Array | Dictionary), depth: number): string
+Serializer.SerializeTable = function(self, input: (Array<any> | Dictionary<any, any>), depth: number): string
 	assert(typeof(input) == "table", "Expected input to be a table")
 	assert(typeof(depth) == "number", "Expected depth to be a number")
 	
+	-- Prevent for stack overflow when something trying to grab same exact table somewhere
+	if self.Cache[input] then
+		return table.concat(self:RemoveEmptyStrings(self.Cache[input]), "\n")
+	end
+	
 	local output: {string} = {}
 	depth = depth or 0
-
-	for key: any, value: any in pairs(input) do
+	
+	local iterator: (...any) -> (...any) = self:IsArray(input) and ipairs or pairs
+	for key: any, value: any in iterator(input) do
 		local valueType: any = typeof(value)
-		local keyString: string = self:AddTabulators(string_format("[%s]", typeof(key) == "number" and tostring(key) or '"' .. tostring(key) .. '"'), depth)
+		local keyString: string = self:AddTabulators(string_format("[%s]", typeof(key) == "number" and tostring(key) or '"' .. tostring(self:FormatString(key)) .. '"'), depth)
+
 		local valueString: string
-
 		if valueType == "table" then
-			local serializedTable: string = self:SerializeTable(value, depth + 1)
-
-			if serializedTable == "" or serializedTable == "\n" then
-				valueString = "{},"
+			if self.Options.ReadMetatables and getmetatable(value) ~= nil then
+				local serializedMetatable: string = self:SerializeMetatable(value, depth + 1)
+				if serializedMetatable == "" or serializedMetatable == "\n" then
+					valueString = "{},"
+				else
+					valueString = string_format("%s,", serializedMetatable)
+				end
 			else
-				valueString = string_format("{\n%s\n%s},", serializedTable, self:AddTabulators("", depth))
+				local serializedTable: string = self:SerializeTable(value, depth + 1)
+				if serializedTable == "" or serializedTable == "\n" then
+					valueString = string_format("{%s},", getmetatable(value) ~= nil and "--[[ Metatable detected - enable 'ReadMetatables' to serialize and preserve its full structure accurately ]]--" or "")
+				else
+					valueString = string_format("{\n%s%s\n%s},", getmetatable(value) ~= nil and self:AddTabulators("--[[ Metatable detected - enable 'ReadMetatables' to serialize and preserve its full structure accurately ]]--\n", depth + 1) or "" , serializedTable, self:AddTabulators("", depth))
+				end
 			end
 		elseif valueType == "function" then
 			valueString = string_format("%s,", self:SerializeFunction(value, depth + 1))
 		else
 			valueString = string_format("%s,", self:FormatValue(value))
 		end
-		
+
 		if self.Options.DebugTypes then
 			local debugTypeInfo = string_format(" --%s, %s", tostring(typeof(key)), tostring(typeof(value)))
-			
+
 			if typeof(value) == "Instance" then
 				debugTypeInfo ..= string_format(" (ClassName: %s)", value.ClassName)
 			end
-			
+
 			valueString ..= debugTypeInfo
 		end
-		
+
 		table.insert(output, string_format("%s = %s", keyString, valueString))
 	end
-
+	
+	self.Cache[input] = output
 	return table.concat(self:RemoveEmptyStrings(output), "\n")
 end
 
 return function(options: Options?)
 	local self = setmetatable({}, Serializer)
-	
+
 	self.Options = options or {
 		DebugFunctions = false,
 		DebugTypes = true,
@@ -427,19 +499,19 @@ return function(options: Options?)
 	}::Options
 
 	return {
-		serializeJSON = function(input)
+		serializeJSON = function(input: string): string
 			local success, result = pcall(function() 
 				return game:GetService("HttpService"):JSONDecode(input)
 			end)
-			
+
 			assert(success, result)
-			
+
 			return string_format("%s\nreturn {\n%s\n}", Watermark, self:SerializeTable(result, 1))
 		end,
 
-		serializeTable = function(input)
+		serializeTable = function(input: (Array<any> | Dictionary<any, any>)): string
 			assert(typeof(input) == "table", "The first argument in serializeTable must be a Table!")
-			
+
 			return string_format("%s\nreturn {\n%s\n}", Watermark, self:SerializeTable(input, 1))
 		end
 	}
