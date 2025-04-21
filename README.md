@@ -3,7 +3,7 @@
 ```lua
 local Serializer = loadstring(game:HttpGet("https://raw.githubusercontent.com/zyzxti123/Serializer/main/source.lua"))()({
     DebugFunctions = false, --// Show constants, upvalues, and protos in functions
-    DebugTypes = true --// Show all types for values and keys
+    DebugTypes = true, --// Show all types for values and keys
     ReadMetatables = false --// Display full metatable structure (by default only values from __index will be showed)
 })
 ```
