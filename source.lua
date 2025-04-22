@@ -95,7 +95,7 @@ Serializer.FormatString = function(self, input: string): string
 		["\v"] = "\\v",
 		["\f"] = "\\f",
 		["\r"] = "\\r",
-		["/"] = "\\/"
+		["/"] = "/"
 	}
 
 	return string_gsub(string_gsub(input, "[%z\\\"/\1-\31\127-\255]", function(character: string)
